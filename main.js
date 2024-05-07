@@ -146,14 +146,15 @@ let time = 0;
 function boxhit(key, box, pad){
     if (key && box.object.name == "longbox") {
         let newbox = 0;
-        if ((box.object.position.z + box.object.scale.z) - pad.position.z >= 0.02){
+        console.log((box.object.position.z + box.object.scale.z) - pad.position.z);
+        if ((box.object.position.z + box.object.scale.z) - pad.position.z >= 0.05){
             boxes.push(createLongBox(0xff2062));
             newbox = boxes.length - 1;
             boxes[newbox].position.y = 0.55;
             boxes[newbox].position.x = box.object.position.x;
             boxes[newbox].position.z = box.object.position.z - ((box.object.position.z + box.object.scale.z) - pad.position.z) / 2;
             boxes[newbox].scale.z = box.object.scale.z - ((box.object.position.z + box.object.scale.z) - pad.position.z) / 2;
-            if (!remains) {
+            if (!remains && (box.object.position.z + box.object.scale.z) - pad.position.z >= 0.1) {
                 tabremains.push(createLongBox(0xff2062));
                 let nlength = tabremains.length - 1;
                 tabremains[nlength].position.x = box.object.position.x;
