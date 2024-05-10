@@ -5,8 +5,6 @@ import { Timer } from 'three/addons/misc/Timer.js';
 
 import {createLongBox} from './createobject.js';
 import Pad from './Pad.js';
-import { gameManager } from './main.js';
-
 export default class GameManager {
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
