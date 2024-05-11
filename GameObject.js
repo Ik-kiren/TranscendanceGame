@@ -16,6 +16,8 @@ export default class GameManager {
     composer;
     bloomPass;
 
+    roads = [];
+
     controls = new OrbitControls(this.camera, this.renderer.domElement);
 
     light = new THREE.PointLight(0xffffff, 130, 1000);
@@ -62,17 +64,17 @@ export default class GameManager {
 
     constructor() {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.toneMapping = THREE.LinearToneMapping;
-        this.renderer.toneMappingExposure = 2;
+        this.renderer.toneMapping = THREE.CineonMapping;
+        this.renderer.toneMappingExposure = 1;
         document.body.appendChild(this.renderer.domElement);
         this.rendererScene = new RenderPass(this.scene, this.camera);
         this.composer = new EffectComposer(this.renderer);
         this.composer.addPass(this.rendererScene);
         this.bloomPass = new UnrealBloomPass(
             new THREE.Vector2(window.innerWidth, window.innerHeight),
+            0.5,
             1.1,
-            1.2,
-            0.9
+            1.5
         );
         this.composer.addPass(this.bloomPass);
     }

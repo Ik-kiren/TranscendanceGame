@@ -38,19 +38,29 @@ const collisionTimer = new Timer();
 
 const loader = new GLTFLoader();
 loader.load( 'road.glb', function ( gltf ) {
+    gameManager.roads.push(gltf.scene);
+    gltf.scene.scale.set(1,1,0.8);
     gltf.scene.rotation.y = Math.PI / 2;
-    console.log(gltf.scene);
-    gltf.scene.children[0].children[1].material.emissiveIntensity = 10;
     gameManager.scene.add( gltf.scene );
+    loader.load( 'road.glb', function ( gltf ) {
+        gameManager.roads.push(gltf.scene);
+        gltf.scene.scale.set(1,1,0.8);
+        gltf.scene.position.z = -255;
+        gltf.scene.rotation.y = Math.PI / 2;
+        gameManager.scene.add( gltf.scene );
+    }, undefined, function ( error ) {
+        console.log( error );
+    }
+    );
 }, undefined, function ( error ) {
     console.log( error );
 }
-)
+);
 
 let mixer;
 
 const blackHoleLoader = new GLTFLoader();
-loader.load( 'blackhole.glb', function ( gltf ) {
+blackHoleLoader.load( 'blackhole.glb', function ( gltf ) {
     
     gltf.scene.position.set(0, 3, -12);
     gltf.scene.rotation.set(Math.PI / 9, 0, 0);
@@ -158,6 +168,37 @@ function animate(){
     gameManager.controls.update();
 
     writeScore();
+
+    for (let i = 0; i < gameManager.roads.length; i++) {
+        console.log(gameManager.roads[i].position.z);
+        if (gameManager.roads[i].position.z > 255) {
+            loader.load( 'road.glb', function ( gltf ) {
+                gameManager.roads.push(gltf.scene);
+                gltf.scene.scale.set(1,1,0.8);
+                gltf.scene.position.z = gameManager.roads[i].position.z - 255;
+                gltf.scene.rotation.y = Math.PI / 2;
+                gameManager.scene.add( gltf.scene );
+            }, undefined, function ( error ) {
+                console.log( error );
+            });
+            gameManager.scene.remove(gameManager.roads[i]);
+            gameManager.roads.splice(gameManager.roads.indexOf(gameManager.roads[i]), 1);
+        }
+        if (gameManager.roads[i].position.z < -255) {
+            loader.load( 'road.glb', function ( gltf ) {
+                gameManager.roads.push(gltf.scene);
+                gltf.scene.scale.set(1,1,0.8);
+                gltf.scene.position.z = gameManager.roads[i].position.z + 255;
+                gltf.scene.rotation.y = Math.PI / 2;
+                gameManager.scene.add( gltf.scene );
+            }, undefined, function ( error ) {
+                console.log( error );
+            });
+            gameManager.scene.remove(gameManager.roads[i]);
+            gameManager.roads.splice(gameManager.roads.indexOf(gameManager.roads[i]), 1);
+        }
+        gameManager.roads[i].position.z += 0.2 * gameManager.inversion;
+    }
 
     gameManager.cleanBlocks();
 
