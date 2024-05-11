@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Timer } from 'three/addons/misc/Timer.js';
 import { randInt } from 'three/src/math/MathUtils.js';
+import { GLTFLoader } from 'three/examples/jsm/Addons.js';
 
 import {createBox, createLongBox, createRapidBox} from './createobject.js';
 import {keyPressed, keyReleased} from './events.js';
@@ -35,6 +36,38 @@ function writeScore(){
 
 const collisionTimer = new Timer();
 
+const loader = new GLTFLoader();
+loader.load( 'road.glb', function ( gltf ) {
+    gltf.scene.rotation.y = Math.PI / 2;
+    console.log(gltf.scene);
+    gltf.scene.children[0].children[1].material.emissiveIntensity = 10;
+    gameManager.scene.add( gltf.scene );
+}, undefined, function ( error ) {
+    console.log( error );
+}
+)
+
+let mixer;
+
+const blackHoleLoader = new GLTFLoader();
+loader.load( 'blackhole.glb', function ( gltf ) {
+    
+    gltf.scene.position.set(0, 3, -12);
+    gltf.scene.rotation.set(Math.PI / 9, 0, 0);
+    gltf.scene.scale.set(2.5,2.5,);
+    gameManager.blackHole = gltf.scene;
+    mixer = new THREE.AnimationMixer(gltf.scene);
+
+    const clip = THREE.AnimationClip.findByName(gltf.animations, 'Take 001');
+    const action = mixer.clipAction(clip);
+    action.play();
+}, undefined, function ( error ) {
+    console.log( error );
+}
+)
+
+
+
 function init() {
 
     gameManager.padMiddle.pad.position.set(0, 0, 3);
@@ -47,6 +80,7 @@ function init() {
     gameManager.camera.position.set(0, 3.5, 6.5);
 
     gameManager.light.position.set(0, 7, 0);
+    gameManager.light.castShadow = true;
 
     gameManager.scene.add(gameManager.padMiddle.pad);
     gameManager.scene.add(gameManager.padLeft.pad);
@@ -114,9 +148,12 @@ function animation() {
     }
 }
 
+const clockBH = new THREE.Clock(true);
+
 function animate(){
     requestAnimationFrame(animate);
-    gameManager.renderer.render(gameManager.scene, gameManager.camera);
+    //gameManager.renderer.render(gameManager.scene, gameManager.camera);
+    gameManager.composer.render();
     gameManager.timer.update();
     gameManager.controls.update();
 
@@ -134,6 +171,7 @@ function animate(){
         animation();
     if (gameManager.scoreAnim)
         addScoreAnim(10);
+    mixer.update(clockBH.getDelta());
 }
 init();
 animate();

@@ -1,6 +1,9 @@
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/Addons.js';
+import { OrbitControls, ThreeMFLoader } from 'three/examples/jsm/Addons.js';
 import { Timer } from 'three/addons/misc/Timer.js';
+import { RenderPass } from 'three/examples/jsm/Addons.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { UnrealBloomPass } from 'three/examples/jsm/Addons.js';
 
 
 import {createLongBox} from './createobject.js';
@@ -8,7 +11,10 @@ import Pad from './Pad.js';
 export default class GameManager {
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
-    renderer = new THREE.WebGLRenderer();
+    renderer = new THREE.WebGLRenderer({antialias: true});
+    rendererScene;
+    composer;
+    bloomPass;
 
     controls = new OrbitControls(this.camera, this.renderer.domElement);
 
@@ -52,9 +58,23 @@ export default class GameManager {
     scoreJump = 0;
     scoreToAdd = 0;
 
+    blackHole;
+
     constructor() {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.toneMapping = THREE.LinearToneMapping;
+        this.renderer.toneMappingExposure = 2;
         document.body.appendChild(this.renderer.domElement);
+        this.rendererScene = new RenderPass(this.scene, this.camera);
+        this.composer = new EffectComposer(this.renderer);
+        this.composer.addPass(this.rendererScene);
+        this.bloomPass = new UnrealBloomPass(
+            new THREE.Vector2(window.innerWidth, window.innerHeight),
+            1.1,
+            1.2,
+            0.9
+        );
+        this.composer.addPass(this.bloomPass);
     }
 
     cleanBlocks() {
