@@ -20,7 +20,7 @@ export default class GameManager {
 
     controls = new OrbitControls(this.camera, this.renderer.domElement);
 
-    light = new THREE.PointLight(0xffffff, 130, 1000);
+    light = new THREE.PointLight(0xffffff, 100, 1000);
 
     padMiddle = new Pad(0x00ff00);
     padLeft = new Pad(0xff0000);
@@ -72,7 +72,7 @@ export default class GameManager {
         this.composer.addPass(this.rendererScene);
         this.bloomPass = new UnrealBloomPass(
             new THREE.Vector2(window.innerWidth, window.innerHeight),
-            0.5,
+            0.4,
             1.1,
             1.5
         );

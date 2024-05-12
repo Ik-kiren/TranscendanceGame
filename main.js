@@ -62,8 +62,8 @@ let mixer;
 const blackHoleLoader = new GLTFLoader();
 blackHoleLoader.load( 'blackhole.glb', function ( gltf ) {
     
-    gltf.scene.position.set(0, 3, -12);
-    gltf.scene.rotation.set(Math.PI / 9, 0, 0);
+    gltf.scene.position.set(0, 6, -12);
+    gltf.scene.rotation.set(Math.PI / 8, 0, 0);
     gltf.scene.scale.set(2.5,2.5,);
     gameManager.blackHole = gltf.scene;
     mixer = new THREE.AnimationMixer(gltf.scene);
@@ -73,10 +73,7 @@ blackHoleLoader.load( 'blackhole.glb', function ( gltf ) {
     action.play();
 }, undefined, function ( error ) {
     console.log( error );
-}
-)
-
-
+});
 
 function init() {
 
@@ -89,7 +86,7 @@ function init() {
     gameManager.camera.rotation.x = -1 * Math.PI / 10;
     gameManager.camera.position.set(0, 3.5, 6.5);
 
-    gameManager.light.position.set(0, 7, 0);
+    gameManager.light.position.set(0, 8, 0);
     gameManager.light.castShadow = true;
 
     gameManager.scene.add(gameManager.padMiddle.pad);
@@ -197,7 +194,7 @@ function animate(){
             gameManager.scene.remove(gameManager.roads[i]);
             gameManager.roads.splice(gameManager.roads.indexOf(gameManager.roads[i]), 1);
         }
-        gameManager.roads[i].position.z += 0.2 * gameManager.inversion;
+        gameManager.roads[i].position.z += 0.07 * gameManager.inversion;
     }
 
     gameManager.cleanBlocks();
