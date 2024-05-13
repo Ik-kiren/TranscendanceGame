@@ -61,6 +61,8 @@ export default class GameManager {
     scoreToAdd = 0;
 
     blackHole;
+    longBox;
+    pad;
 
     constructor() {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -72,7 +74,7 @@ export default class GameManager {
         this.composer.addPass(this.rendererScene);
         this.bloomPass = new UnrealBloomPass(
             new THREE.Vector2(window.innerWidth, window.innerHeight),
-            0.4,
+            0.5,
             1.1,
             1.5
         );
@@ -99,26 +101,28 @@ export default class GameManager {
 
     longboxHit(box, pad){
         let newBox = 0;
-        this.boxes.push(createLongBox(0xff2062));
+        this.boxes.push(createLongBox(this, 0xff2062));
         newBox = this.boxes.length - 1;
+
+        
         this.boxes[newBox].position.y = this.boxParams.positionY;
-        this.boxes[newBox].position.x = box.object.position.x;
-        console.log((((box.object.position.z + box.object.scale.z * this.inversion) - pad.position.z) * this.inversion));
-        this.boxes[newBox].position.z = box.object.position.z - ((((box.object.position.z + box.object.scale.z * this.inversion) - pad.position.z) / 2));
-        this.boxes[newBox].scale.z = box.object.scale.z - ((box.object.position.z + box.object.scale.z * this.inversion) - pad.position.z) * this.inversion / 2;
-        if (!this.remains && ((box.object.position.z + box.object.scale.z * this.inversion) - pad.position.z) * this.inversion >= 0.01) {
-            this.tabRemains.push(createLongBox(0xff2062));
+        this.boxes[newBox].position.x = box.object.parent.position.x;
+        console.log((((box.object.parent.position.z + box.object.parent.scale.z * this.inversion) - pad.position.z) * this.inversion));
+        this.boxes[newBox].position.z = box.object.parent.position.z - ((((box.object.parent.position.z + box.object.parent.scale.z * this.inversion) - pad.position.z) / 2));
+        this.boxes[newBox].scale.z = box.object.parent.scale.z - ((box.object.parent.position.z + box.object.parent.scale.z * this.inversion) - pad.position.z) * this.inversion / 2;
+        if (!this.remains && ((box.object.parent.position.z + box.object.parent.scale.z * this.inversion) - pad.position.z) * this.inversion >= 0.01) {
+            this.tabRemains.push(createLongBox(this, 0xff2062));
             let newRemains = this.tabRemains.length - 1;
-            this.tabRemains[newRemains].position.x = box.object.position.x;
+            this.tabRemains[newRemains].position.x = box.object.parent.position.x;
             this.tabRemains[newRemains].position.y = this.boxParams.positionY;
-            this.tabRemains[newRemains].scale.z = ((box.object.position.z + box.object.scale.z * this.inversion) - pad.position.z) * this.inversion / 2;
-            this.tabRemains[newRemains].position.z = pad.position.z + (((box.object.position.z + box.object.scale.z * this.inversion) - pad.position.z) / 2);
+            this.tabRemains[newRemains].scale.z = ((box.object.parent.position.z + box.object.parent.scale.z * this.inversion) - pad.position.z) * this.inversion / 2;
+            this.tabRemains[newRemains].position.z = pad.position.z + (((box.object.parent.position.z + box.object.parent.scale.z * this.inversion) - pad.position.z) / 2);
             this.scene.add(this.tabRemains[newRemains]);
             this.remains = true;
         }
         this.scene.add(this.boxes[newBox]);
-        this.scene.remove(box.object);
-        this.boxes.splice(this.boxes.indexOf(box.object), 1);
+        this.scene.remove(box.object.parent);
+        this.boxes.splice(this.boxes.indexOf(box.object.parent), 1);
         this.score += 1;
     }
 
@@ -136,13 +140,13 @@ export default class GameManager {
 
     boxHit(key, box, pad){
         this.collisionTime = 0;
-        if (key && box.object.name == "longbox") {
-            if (box.object.scale.z >= 0.1 && ((box.object.position.z + box.object.scale.z * this.inversion) - pad.position.z) * this.inversion > 0.01){
+        if (key && box.object.parent.name == "longbox") {
+            if (box.object.scale.z >= 0.1 && ((box.object.parent.position.z + box.object.parent.scale.z * this.inversion) - pad.position.z) * this.inversion > 0.01){
                 this.longboxHit(box, pad)
             }
-            if (box.object.scale.z <= 0.1) {
-                this.scene.remove(box.object);
-                this.boxes.splice(this.boxes.indexOf(box.object), 1);
+            if (box.object.parent.scale.z <= 0.1) {
+                this.scene.remove(box.object.parent);
+                this.boxes.splice(this.boxes.indexOf(box.object.parent), 1);
             }
         } else if (key && box.object.name == "rapidbox" && !this.rapidBoxBool) {
             this.rapidboxhit(box);

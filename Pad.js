@@ -10,5 +10,12 @@ export default class Pad {
         this.pad = new THREE.Mesh(boxgeometry, boxmesh);
         this.pad.name = "pad";
         this.raycaster = new THREE.Raycaster(this.pad.position, new THREE.Vector3(0, 1, 0));
+
+        /*const loader = new GLTFLoader();
+        loader.load( 'pad.glb', ( gltf ) => {
+            this.pad = gltf.scene;
+        }, undefined, function ( error ) {
+            console.log( error );
+        });*/
     }
 }

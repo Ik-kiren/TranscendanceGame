@@ -8,12 +8,16 @@ function createBox(_color) {
     return box;
 }
 
-function createLongBox(_color) {
-    let boxgeometry = new THREE.BoxGeometry(1, 1, 2, 1, 1, 1);
+function createLongBox(gameManager, _color) {
+    /*let boxgeometry = new THREE.BoxGeometry(1, 1, 2, 1, 1, 1);
     let boxmesh = new THREE.MeshToonMaterial({color: _color});
     let box = new THREE.Mesh(boxgeometry, boxmesh);
-    box.name = "longbox";
-    return box;
+    box.name = "longbox";*/
+    let longBox = gameManager.longBox.clone();
+    longBox.scale.set(0.5, 0.5, 0.5);
+    longBox.name = "longbox";
+    return longBox;
+    //return box;
 }
 
 function createRapidBox(_color){

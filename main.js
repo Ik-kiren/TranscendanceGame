@@ -9,6 +9,31 @@ import GameManager from './GameObject.js';
 
 export let gameManager = new GameManager();
 
+function loadObject(path) {
+    return new Promise((resolve, reject) => {
+        const loader = new GLTFLoader();
+        loader.load( path, resolve, undefined, reject);
+    });
+}
+
+const loaderLB = new GLTFLoader();
+loaderLB.load( 'longCube.glb', function ( gltf ) {
+    gameManager.longBox = gltf.scene;
+}, undefined, function ( error ) {
+    console.log( error );
+});
+
+const loaderPad = new GLTFLoader();
+loaderPad.load( 'pad.glb', function ( gltf ) {
+    gameManager.pad = gltf.scene;
+}, undefined, function ( error ) {
+    console.log( error );
+});
+
+
+let blackHolePromise = loadObject('blackhole.glb');
+let roadPromise = loadObject('road.glb');
+
 document.body.addEventListener('keydown', keyPressed);
 document.body.addEventListener('keyup', keyReleased);
 
@@ -28,6 +53,7 @@ var mesh = new THREE.Mesh(new THREE.PlaneGeometry(6, 2), material);
 mesh.position.y = 3;
 gameManager.scene.add(mesh);
 
+
 function writeScore(){
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.fillText(gameManager.score, 0, 30);
@@ -36,22 +62,19 @@ function writeScore(){
 
 const collisionTimer = new Timer();
 
+
 const loader = new GLTFLoader();
 loader.load( 'road.glb', function ( gltf ) {
     gameManager.roads.push(gltf.scene);
     gltf.scene.scale.set(1,1,0.8);
     gltf.scene.rotation.y = Math.PI / 2;
     gameManager.scene.add( gltf.scene );
-    loader.load( 'road.glb', function ( gltf ) {
-        gameManager.roads.push(gltf.scene);
-        gltf.scene.scale.set(1,1,0.8);
-        gltf.scene.position.z = -255;
-        gltf.scene.rotation.y = Math.PI / 2;
-        gameManager.scene.add( gltf.scene );
-    }, undefined, function ( error ) {
-        console.log( error );
-    }
-    );
+    let secondRoad = gltf.scene.clone();
+    gameManager.roads.push(secondRoad );
+    secondRoad.scale.set(1,1,0.8);
+    secondRoad.position.z = -255;
+    secondRoad.rotation.y = Math.PI / 2;
+    gameManager.scene.add( secondRoad  );
 }, undefined, function ( error ) {
     console.log( error );
 }
@@ -75,13 +98,23 @@ blackHoleLoader.load( 'blackhole.glb', function ( gltf ) {
     console.log( error );
 });
 
+
+
 function init() {
-
+    gameManager.padMiddle.pad = gameManager.pad.clone();
+    gameManager.padMiddle.pad.getObjectByName("Cylinder001").material = gameManager.pad.getObjectByName("Cylinder001").material.clone();
     gameManager.padMiddle.pad.position.set(0, 0, 3);
+    gameManager.padMiddle.pad.getObjectByName("Cylinder001").material.emissive = new THREE.Color(0x6e52b4);
 
+    gameManager.padLeft.pad = gameManager.pad.clone(true);
+    gameManager.padLeft.pad.getObjectByName("Cylinder001").material = gameManager.pad.getObjectByName("Cylinder001").material.clone();
     gameManager.padLeft.pad.position.set(-1, 0, 3);
+    gameManager.padLeft.pad.getObjectByName("Cylinder001").material.emissive = new THREE.Color(0x26d8ff)
 
+    gameManager.padRight.pad = gameManager.pad.clone(true);
+    gameManager.padRight.pad.getObjectByName("Cylinder001").material = gameManager.pad.getObjectByName("Cylinder001").material.clone();
     gameManager.padRight.pad.position.set(1, 0, 3);
+    gameManager.padRight.pad.getObjectByName("Cylinder001").material.emissive = new THREE.Color(0x87ff53)
 
     gameManager.camera.rotation.x = -1 * Math.PI / 10;
     gameManager.camera.position.set(0, 3.5, 6.5);
@@ -101,11 +134,12 @@ function spawnBlocks(){
     if (gameManager.time > gameManager.spawnTimer){
         let randomBox = randInt(0, 2);
         if (randomBox == 0)
-            gameManager.boxes.push(createLongBox(0xff2062));
+            gameManager.boxes.push(createLongBox(gameManager, 0xff2062));
         else if (randomBox == 1)
             gameManager.boxes.push(createBox(0xff2062))
         else if (randomBox == 2)
             gameManager.boxes.push(createRapidBox(0xcc2062))
+        console.log(gameManager.boxes[gameManager.boxes.length - 1]);
         gameManager.scene.add(gameManager.boxes[gameManager.boxes.length - 1]);
         gameManager.boxes[gameManager.boxes.length - 1].position.z = gameManager.boxParams.spawnPosition;
         gameManager.boxes[gameManager.boxes.length - 1].position.y = gameManager.boxParams.positionY;
@@ -157,6 +191,8 @@ function animation() {
 
 const clockBH = new THREE.Clock(true);
 
+
+
 function animate(){
     requestAnimationFrame(animate);
     //gameManager.renderer.render(gameManager.scene, gameManager.camera);
@@ -167,7 +203,6 @@ function animate(){
     writeScore();
 
     for (let i = 0; i < gameManager.roads.length; i++) {
-        console.log(gameManager.roads[i].position.z);
         if (gameManager.roads[i].position.z > 255) {
             loader.load( 'road.glb', function ( gltf ) {
                 gameManager.roads.push(gltf.scene);
@@ -211,5 +246,13 @@ function animate(){
         addScoreAnim(10);
     mixer.update(clockBH.getDelta());
 }
-init();
-animate();
+const [blackhole, road] = await Promise.all([blackHolePromise, roadPromise]).catch((reason) => {
+    console.error(reason);
+    return [undefined, undefined];
+})
+if (!blackhole || !road) {
+    alert("merde !");
+} else{
+    init();
+    animate();
+}
