@@ -17,8 +17,9 @@ function loadObject(path) {
 }
 
 const loaderLB = new GLTFLoader();
-loaderLB.load( 'longCube.glb', function ( gltf ) {
+loaderLB.load( 'longPush.glb', function ( gltf ) {
     gameManager.longBox = gltf.scene;
+    gameManager.longBoxAnim = THREE.AnimationClip.findByName(gltf.animations, 'CubeAction');
 }, undefined, function ( error ) {
     console.log( error );
 });
@@ -190,6 +191,7 @@ function animation() {
 }
 
 const clockBH = new THREE.Clock(true);
+const clockLB = new THREE.Clock(true);
 
 
 
@@ -245,6 +247,8 @@ function animate(){
     if (gameManager.scoreAnim)
         addScoreAnim(10);
     mixer.update(clockBH.getDelta());
+    if (gameManager.longBoxAnimBool)
+        gameManager.longBoxAnim.update(clockLB.getDelta());
 }
 const [blackhole, road] = await Promise.all([blackHolePromise, roadPromise]).catch((reason) => {
     console.error(reason);

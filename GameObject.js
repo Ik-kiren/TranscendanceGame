@@ -34,7 +34,7 @@ export default class GameManager {
     tabRemains = [];
     boxParams = {
         speed : 0.02,
-        positionY : 0.55,
+        positionY : 0.8,
         spawnPosition : 0
     }
 
@@ -62,6 +62,8 @@ export default class GameManager {
 
     blackHole;
     longBox;
+    longBoxAnim;
+    longBoxAnimBool = false;
     pad;
 
     constructor() {
@@ -100,11 +102,10 @@ export default class GameManager {
     }
 
     longboxHit(box, pad){
-        let newBox = 0;
+        console.log(box);
+        /*let newBox = 0;
         this.boxes.push(createLongBox(this, 0xff2062));
         newBox = this.boxes.length - 1;
-
-        
         this.boxes[newBox].position.y = this.boxParams.positionY;
         this.boxes[newBox].position.x = box.object.parent.position.x;
         console.log((((box.object.parent.position.z + box.object.parent.scale.z * this.inversion) - pad.position.z) * this.inversion));
@@ -123,7 +124,7 @@ export default class GameManager {
         this.scene.add(this.boxes[newBox]);
         this.scene.remove(box.object.parent);
         this.boxes.splice(this.boxes.indexOf(box.object.parent), 1);
-        this.score += 1;
+        this.score += 1;*/
     }
 
     rapidboxhit(box) {
