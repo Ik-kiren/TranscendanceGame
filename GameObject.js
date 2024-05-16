@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { OrbitControls, ThreeMFLoader } from 'three/examples/jsm/Addons.js';
+import { OrbitControls} from 'three/examples/jsm/Addons.js';
 import { Timer } from 'three/addons/misc/Timer.js';
 import { RenderPass } from 'three/examples/jsm/Addons.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
@@ -22,9 +22,9 @@ export default class GameManager {
 
     light = new THREE.PointLight(0xffffff, 100, 1000);
 
-    padMiddle = new Pad(0x00ff00);
-    padLeft = new Pad(0xff0000);
-    padRight = new Pad(0x0000ff);
+    padMiddle = new Pad();
+    padLeft = new Pad();
+    padRight = new Pad();
 
     timer = new Timer();
 
@@ -38,7 +38,7 @@ export default class GameManager {
         spawnPosition : 0
     }
 
-    spawnTimer = 3;
+    spawnTimer = 4;
     score = 0;
     rapidBoxBool = false;
     inversion = 1;
@@ -81,6 +81,8 @@ export default class GameManager {
             1.5
         );
         this.composer.addPass(this.bloomPass);
+        this.clockAnim = new THREE.Clock();
+        this.currentAnim = undefined;
     }
 
     cleanBlocks() {
@@ -101,84 +103,93 @@ export default class GameManager {
         }
     }
 
-    longboxHit(box, pad){
-        console.log(box);
-        /*let newBox = 0;
-        this.boxes.push(createLongBox(this, 0xff2062));
-        newBox = this.boxes.length - 1;
-        this.boxes[newBox].position.y = this.boxParams.positionY;
-        this.boxes[newBox].position.x = box.object.parent.position.x;
-        console.log((((box.object.parent.position.z + box.object.parent.scale.z * this.inversion) - pad.position.z) * this.inversion));
-        this.boxes[newBox].position.z = box.object.parent.position.z - ((((box.object.parent.position.z + box.object.parent.scale.z * this.inversion) - pad.position.z) / 2));
-        this.boxes[newBox].scale.z = box.object.parent.scale.z - ((box.object.parent.position.z + box.object.parent.scale.z * this.inversion) - pad.position.z) * this.inversion / 2;
-        if (!this.remains && ((box.object.parent.position.z + box.object.parent.scale.z * this.inversion) - pad.position.z) * this.inversion >= 0.01) {
-            this.tabRemains.push(createLongBox(this, 0xff2062));
-            let newRemains = this.tabRemains.length - 1;
-            this.tabRemains[newRemains].position.x = box.object.parent.position.x;
-            this.tabRemains[newRemains].position.y = this.boxParams.positionY;
-            this.tabRemains[newRemains].scale.z = ((box.object.parent.position.z + box.object.parent.scale.z * this.inversion) - pad.position.z) * this.inversion / 2;
-            this.tabRemains[newRemains].position.z = pad.position.z + (((box.object.parent.position.z + box.object.parent.scale.z * this.inversion) - pad.position.z) / 2);
-            this.scene.add(this.tabRemains[newRemains]);
-            this.remains = true;
+    longboxHit(box){
+        box.position.z -= this.boxParams.speed * this.inversion;
+        if (this.currentAnim == undefined){
+            this.currentAnim = new THREE.AnimationMixer(box);
+            this.currentAnim.addEventListener('finished', (e) => {this.currentAnim = undefined,this.scene.remove(box), console.log(this.currentAnim)});
+            const action = this.currentAnim.clipAction(this.longBoxAnim);
+            action.clampWhenFinished = true;
+            action.setEffectiveTimeScale(2); 
+            action.setLoop(THREE.LoopOnce);
+            action.play();
         }
-        this.scene.add(this.boxes[newBox]);
-        this.scene.remove(box.object.parent);
-        this.boxes.splice(this.boxes.indexOf(box.object.parent), 1);
-        this.score += 1;*/
+        else (this.currentAnim != undefined)
+            this.currentAnim.update(this.clockAnim.getDelta());
     }
 
     rapidboxhit(box) {
         this.scoreAnim = true;
         this.scoreToAdd += 10;
-        if (box.object.scale.z < 0.2) {
-            this.scene.remove(box.object);
-            this.boxes.splice(this.boxes.indexOf(box.object), 1);
+        if (box.scale.z < 0.2) {
+            this.scene.remove(box);
+            this.boxes.splice(this.boxes.indexOf(box), 1);
         }
         else {
-            box.object.scale.set(box.object.scale.x, box.object.scale.y, box.object.scale.z - 0.09);
+            box.scale.set(box.scale.x, box.scale.y, box.scale.z - 0.09);
         }
     }
 
     boxHit(key, box, pad){
         this.collisionTime = 0;
-        if (key && box.object.parent.name == "longbox") {
-            if (box.object.scale.z >= 0.1 && ((box.object.parent.position.z + box.object.parent.scale.z * this.inversion) - pad.position.z) * this.inversion > 0.01){
-                this.longboxHit(box, pad)
-            }
-            if (box.object.parent.scale.z <= 0.1) {
-                this.scene.remove(box.object.parent);
-                this.boxes.splice(this.boxes.indexOf(box.object.parent), 1);
-            }
-        } else if (key && box.object.name == "rapidbox" && !this.rapidBoxBool) {
+        if (key && box.name == "longbox") {
+            this.longboxHit(box, pad);
+        } else if (key && box.name == "rapidbox" && !this.rapidBoxBool) {
             this.rapidboxhit(box);
             this.rapidBoxBool = true;
-        } else if (box.object.name == "box") {
-            this.scene.remove(box.object);
-            this.boxes.splice(this.boxes.indexOf(box.object), 1);
+        } else if (box.name == "box") {
+            this.scene.remove(box);
+            this.boxes.splice(this.boxes.indexOf(box), 1);
             this.scoreAnim = true;
             this.scoreToAdd += 10;
         }
     }
 
-    collisionBlocksPads(tabintersect) {
-        tabintersect.push(this.padMiddle.raycaster.intersectObjects(this.boxes, true));
-        tabintersect.push(this.padLeft.raycaster.intersectObjects(this.boxes, true));
-        tabintersect.push(this.padRight.raycaster.intersectObjects(this.boxes, true));
-        if (((this.leftPressed && tabintersect[1].length == 0)|| (this.middlePressed && tabintersect[0].length == 0) || (this.rightPressed && tabintersect[2].length == 0)) && this.collisionTime >= 0.7){
-            this.wrongHit = true;
-            if (this.score > 9)
-                this.score -= 10;
-            this.collisionTime = 0;
+    checkCollision(box, pad){
+        let maxSize;
+        let minSize;
+        let position;
+        if (box.name == "box") {
+            maxSize = box.geometry.parameters.width / 2;
+            minSize = -1 * (box.geometry.parameters.width / 2);
+            position = box.position.z;
+        } else if (box.name == "longbox") {
+            maxSize = box.children[0].children[1].geometry.boundingBox.max.z;
+            minSize = box.children[0].children[1].geometry.boundingBox.min.z;
+            position = box.position.z;
+        } else if (box.name == "rapidbox") {
+            maxSize = box.geometry.parameters.length / 2;
+            minSize = -1 * (box.geometry.parameters.length / 2);
+            position = box.position.z;
         }
-        for (let j = 0; j < tabintersect.length; j++){
-            for (let i = 0; i < tabintersect[j].length; i++) {
-                if (j == 0 && this.middlePressed && !this.wrongHit){
-                    this.boxHit(this.middlePressed, tabintersect[j][i], this.padMiddle.pad);
-                } else if (j == 1 && this.leftPressed && !this.wrongHit) {
-                    this.boxHit(this.leftPressed, tabintersect[j][i], this.padLeft.pad);
-                } else if (j == 2 && this.rightPressed && !this.wrongHit) {
-                    this.boxHit(this.rightPressed, tabintersect[j][i], this.padRight.pad);
-                }
+        for (let i = minSize; i <= maxSize; i += 0.1) {
+            if ((position + i >= (pad.position.z - pad.children[0].children[0].geometry.boundingBox.max.z) && position + i <= (pad.position.z + pad.children[0].children[0].geometry.boundingBox.max.z)) && box.position.x == pad.position.x) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    checkSameX(obj, obj2) {
+        if (obj.position.x == obj2.position.x)
+            return true;
+        return false;
+    }
+
+    collisionBlocksPads() {
+        for (let i = 0; i < this.boxes.length; i++) {
+            if (((this.leftPressed && !this.checkCollision(this.boxes[i], this.padLeft.pad) && this.checkSameX(this.boxes[i], this.padLeft.pad)) || (this.middlePressed && !this.checkCollision(this.boxes[i], this.padMiddle.pad) && this.checkSameX(this.boxes[i], this.padMiddle.pad)) || (this.rightPressed && !this.checkCollision(this.boxes[i], this.padRight.pad) && this.checkSameX(this.boxes[i], this.padRight.pad))) && this.collisionTime >= 0.7){
+                this.wrongHit = true;
+                if (this.score > 9)
+                    this.score -= 10;
+                this.collisionTime = 0;
+            }
+            if (this.checkCollision(this.boxes[i], this.padMiddle.pad) && this.middlePressed && !this.wrongHit){
+                this.boxHit(this.middlePressed, this.boxes[i], this.padMiddle.pad);
+            } else if (this.checkCollision(this.boxes[i], this.padLeft.pad) && this.leftPressed && !this.wrongHit) {
+                this.boxHit(this.leftPressed, this.boxes[i], this.padLeft.pad);
+            } else if (this.checkCollision(this.boxes[i], this.padRight.pad) && this.rightPressed && !this.wrongHit) {
+                this.boxHit(this.rightPressed, this.boxes[i], this.padRight.pad);
             }
         }
     }

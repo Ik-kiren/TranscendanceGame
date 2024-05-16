@@ -20,6 +20,7 @@ const loaderLB = new GLTFLoader();
 loaderLB.load( 'longPush.glb', function ( gltf ) {
     gameManager.longBox = gltf.scene;
     gameManager.longBoxAnim = THREE.AnimationClip.findByName(gltf.animations, 'CubeAction');
+    
 }, undefined, function ( error ) {
     console.log( error );
 });
@@ -27,6 +28,7 @@ loaderLB.load( 'longPush.glb', function ( gltf ) {
 const loaderPad = new GLTFLoader();
 loaderPad.load( 'pad.glb', function ( gltf ) {
     gameManager.pad = gltf.scene;
+    gameManager.pad.children[0].children[0].geometry.boundingBox.setFromObject(gameManager.pad.children[0]);
 }, undefined, function ( error ) {
     console.log( error );
 });
@@ -134,8 +136,9 @@ function spawnBlocks(){
     gameManager.time += gameManager.timer.getDelta();
     if (gameManager.time > gameManager.spawnTimer){
         let randomBox = randInt(0, 2);
-        if (randomBox == 0)
+        if (randomBox == 0) {
             gameManager.boxes.push(createLongBox(gameManager, 0xff2062));
+        }
         else if (randomBox == 1)
             gameManager.boxes.push(createBox(0xff2062))
         else if (randomBox == 2)
@@ -193,8 +196,6 @@ function animation() {
 const clockBH = new THREE.Clock(true);
 const clockLB = new THREE.Clock(true);
 
-
-
 function animate(){
     requestAnimationFrame(animate);
     //gameManager.renderer.render(gameManager.scene, gameManager.camera);
@@ -247,8 +248,6 @@ function animate(){
     if (gameManager.scoreAnim)
         addScoreAnim(10);
     mixer.update(clockBH.getDelta());
-    if (gameManager.longBoxAnimBool)
-        gameManager.longBoxAnim.update(clockLB.getDelta());
 }
 const [blackhole, road] = await Promise.all([blackHolePromise, roadPromise]).catch((reason) => {
     console.error(reason);

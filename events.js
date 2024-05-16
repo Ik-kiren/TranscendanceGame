@@ -6,12 +6,15 @@ function inverseSpeed () {
     gameManager.cameraAnim = true;
     //gameManager.camera.position.z -= gameManager.inversion;
     if (gameManager.inversion == -1) {
-        gameManager.boxParams.spawnPosition = 6;
+        gameManager.boxParams.spawnPosition = 10;
         gameManager.scene.add(gameManager.blackHole);
     }
     else {
         gameManager.boxParams.spawnPosition = 0;
         gameManager.scene.remove(gameManager.blackHole);
+    }
+    for (let i = 0; i < gameManager.boxes.length; i++) {
+        gameManager.scene.remove(gameManager.boxes[i]);   
     }
 }
 

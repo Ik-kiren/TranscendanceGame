@@ -15,13 +15,15 @@ function createLongBox(gameManager, _color) {
     box.name = "longbox";*/
     let longBox = gameManager.longBox.clone();
     longBox.scale.set(0.5, 0.5, 0.5);
+    if(gameManager.inversion == -1)
+            longBox.rotation.set(0, Math.PI, 0);
     longBox.name = "longbox";
     return longBox;
     //return box;
 }
 
 function createRapidBox(_color){
-    const geometry = new THREE.CapsuleGeometry( 0.4, 1.5, 4, 8 ); 
+    const geometry = new THREE.CapsuleGeometry( 0.4, 1.5, 4, 8 );
     const material = new THREE.MeshToonMaterial( {color: _color} ); 
     const capsule = new THREE.Mesh( geometry, material );
     capsule.rotation.set(Math.PI / 2, 0, 0);
