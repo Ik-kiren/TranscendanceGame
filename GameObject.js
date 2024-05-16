@@ -61,9 +61,13 @@ export default class GameManager {
     scoreToAdd = 0;
 
     blackHole;
+
+    box;
+
     longBox;
     longBoxAnim;
     longBoxAnimBool = false;
+
     pad;
 
     constructor() {
@@ -150,8 +154,8 @@ export default class GameManager {
         let minSize;
         let position;
         if (box.name == "box") {
-            maxSize = box.geometry.parameters.width / 2;
-            minSize = -1 * (box.geometry.parameters.width / 2);
+            maxSize = 0.5;
+            minSize = -0.5;
             position = box.position.z;
         } else if (box.name == "longbox") {
             maxSize = box.children[0].children[1].geometry.boundingBox.max.z;

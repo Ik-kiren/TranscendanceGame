@@ -1,14 +1,18 @@
 import * as THREE from 'three';
 
-function createBox(_color) {
-    let boxgeometry = new THREE.BoxGeometry(1, 1, 1, 1, 1, 1);
+function createBox(gameManager) {
+    /*let boxgeometry = new THREE.BoxGeometry(1, 1, 1, 1, 1, 1);
     let boxmesh = new THREE.MeshToonMaterial({color: _color});
     let box = new THREE.Mesh(boxgeometry, boxmesh);
+    box.name = "box";
+    return box;*/
+    let box = gameManager.box.clone();
+    box.scale.set(0.005, 0.005, 0.005);
     box.name = "box";
     return box;
 }
 
-function createLongBox(gameManager, _color) {
+function createLongBox(gameManager) {
     /*let boxgeometry = new THREE.BoxGeometry(1, 1, 2, 1, 1, 1);
     let boxmesh = new THREE.MeshToonMaterial({color: _color});
     let box = new THREE.Mesh(boxgeometry, boxmesh);

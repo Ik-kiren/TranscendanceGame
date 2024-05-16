@@ -26,13 +26,18 @@ loaderLB.load( 'longPush.glb', function ( gltf ) {
 });
 
 const loaderPad = new GLTFLoader();
-loaderPad.load( 'pad.glb', function ( gltf ) {
-    gameManager.pad = gltf.scene;
-    gameManager.pad.children[0].children[0].geometry.boundingBox.setFromObject(gameManager.pad.children[0]);
+loaderPad.load( 'gastly.glb', function ( gltf ) {
+    gameManager.box = gltf.scene;
 }, undefined, function ( error ) {
     console.log( error );
 });
 
+const loaderBox = new GLTFLoader();
+loaderBox.load( 'pad.glb', function ( gltf ) {
+    gameManager.pad = gltf.scene;
+}, undefined, function ( error ) {
+    console.log( error );
+});
 
 let blackHolePromise = loadObject('blackhole.glb');
 let roadPromise = loadObject('road.glb');
@@ -137,10 +142,10 @@ function spawnBlocks(){
     if (gameManager.time > gameManager.spawnTimer){
         let randomBox = randInt(0, 2);
         if (randomBox == 0) {
-            gameManager.boxes.push(createLongBox(gameManager, 0xff2062));
+            gameManager.boxes.push(createLongBox(gameManager));
         }
         else if (randomBox == 1)
-            gameManager.boxes.push(createBox(0xff2062))
+            gameManager.boxes.push(createBox(gameManager))
         else if (randomBox == 2)
             gameManager.boxes.push(createRapidBox(0xcc2062))
         console.log(gameManager.boxes[gameManager.boxes.length - 1]);
