@@ -3,8 +3,9 @@ import { Timer } from 'three/addons/misc/Timer.js';
 import { randInt } from 'three/src/math/MathUtils.js';
 import { GLTFLoader } from 'three/examples/jsm/Addons.js';
 
+import {animation, addScoreAnim} from './animation.js';
 import {createBox, createLongBox, createRapidBox} from './createobject.js';
-import {keyPressed, keyReleased} from './events.js';
+import { manageRoads } from './roadManager.js';
 import GameManager from './GameObject.js';
 
 export let gameManager = new GameManager();
@@ -20,30 +21,89 @@ const loaderLB = new GLTFLoader();
 loaderLB.load( 'longPush.glb', function ( gltf ) {
     gameManager.longBox = gltf.scene;
     gameManager.longBoxAnim = THREE.AnimationClip.findByName(gltf.animations, 'CubeAction');
-    
-}, undefined, function ( error ) {
+}, function ( xhr ) {
+    console.log('longpush = ' + ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+}, function ( error ) {
     console.log( error );
 });
 
 const loaderPad = new GLTFLoader();
 loaderPad.load( 'gastly.glb', function ( gltf ) {
     gameManager.box = gltf.scene;
-}, undefined, function ( error ) {
+}, function ( xhr ) {
+    console.log('gastly = ' + ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+}, function ( error ) {
     console.log( error );
 });
 
 const loaderBox = new GLTFLoader();
 loaderBox.load( 'pad.glb', function ( gltf ) {
     gameManager.pad = gltf.scene;
-}, undefined, function ( error ) {
+    gameManager.pad.children[0].children[0].geometry.boundingBox.setFromObject(gameManager.pad.children[0]);
+}, function ( xhr ) {
+    console.log('pad = ' + ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+}, function ( error ) {
+    console.log( error );
+});
+
+const loader = new GLTFLoader();
+loader.load( 'road.glb', function ( gltf ) {
+    gameManager.road = gltf.scene;
+    gameManager.roads.push(gltf.scene);
+    gltf.scene.scale.set(1,1,0.8);
+    gltf.scene.rotation.y = Math.PI / 2;
+    gameManager.scene.add( gltf.scene );
+    let secondRoad = gltf.scene.clone();
+    gameManager.roads.push(secondRoad);
+    secondRoad.scale.set(1,1,0.8);
+    secondRoad.position.z = -255;
+    secondRoad.rotation.y = Math.PI / 2;
+    gameManager.scene.add(secondRoad);
+}, function ( xhr ) {
+    console.log('road = ' + ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+}, function ( error ) {
+    console.log( error );
+});
+
+
+let mixer;
+
+const blackHoleLoader = new GLTFLoader();
+blackHoleLoader.load( 'blackhole.glb', function ( gltf ) {
+    
+    gltf.scene.position.set(0, 6, -12);
+    gltf.scene.rotation.set(Math.PI / 8, 0, 0);
+    gltf.scene.scale.set(2.5,2.5,);
+    gameManager.blackHole = gltf.scene;
+    mixer = new THREE.AnimationMixer(gltf.scene);
+
+    const clip = THREE.AnimationClip.findByName(gltf.animations, 'Take 001');
+    const action = mixer.clipAction(clip);
+    action.play();
+}, function ( xhr ) {
+
+    console.log('blackhole = ' + ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+
+}, function ( error ) {
     console.log( error );
 });
 
 let blackHolePromise = loadObject('blackhole.glb');
 let roadPromise = loadObject('road.glb');
+let padPromise = loadObject('pad.glb');
+let gastlyPromise = loadObject('gastly.glb');
 
-document.body.addEventListener('keydown', keyPressed);
-document.body.addEventListener('keyup', keyReleased);
+function onWindowResize() {
+    gameManager.camera.aspect = window.innerWidth / window.innerHeight;
+    gameManager.camera.updateProjectionMatrix();
+    gameManager.renderer.setSize(window.innerWidth, window.innerHeight);
+    gameManager.rendererScene.setSize(window.innerWidth, window.innerHeight);
+    gameManager.composer.setSize(window.innerWidth, window.innerHeight);
+}
+
+document.body.addEventListener('keydown', gameManager.event.keyPressed.bind(gameManager.event));
+document.body.addEventListener('keyup', gameManager.event.keyReleased.bind(gameManager.event));
+window.addEventListener('resize', onWindowResize);
 
 const canvas = document.createElement('canvas');
 const context = canvas.getContext('2d');
@@ -70,41 +130,6 @@ function writeScore(){
 
 const collisionTimer = new Timer();
 
-
-const loader = new GLTFLoader();
-loader.load( 'road.glb', function ( gltf ) {
-    gameManager.roads.push(gltf.scene);
-    gltf.scene.scale.set(1,1,0.8);
-    gltf.scene.rotation.y = Math.PI / 2;
-    gameManager.scene.add( gltf.scene );
-    let secondRoad = gltf.scene.clone();
-    gameManager.roads.push(secondRoad );
-    secondRoad.scale.set(1,1,0.8);
-    secondRoad.position.z = -255;
-    secondRoad.rotation.y = Math.PI / 2;
-    gameManager.scene.add( secondRoad  );
-}, undefined, function ( error ) {
-    console.log( error );
-}
-);
-
-let mixer;
-
-const blackHoleLoader = new GLTFLoader();
-blackHoleLoader.load( 'blackhole.glb', function ( gltf ) {
-    
-    gltf.scene.position.set(0, 6, -12);
-    gltf.scene.rotation.set(Math.PI / 8, 0, 0);
-    gltf.scene.scale.set(2.5,2.5,);
-    gameManager.blackHole = gltf.scene;
-    mixer = new THREE.AnimationMixer(gltf.scene);
-
-    const clip = THREE.AnimationClip.findByName(gltf.animations, 'Take 001');
-    const action = mixer.clipAction(clip);
-    action.play();
-}, undefined, function ( error ) {
-    console.log( error );
-});
 
 
 
@@ -157,88 +182,17 @@ function spawnBlocks(){
     }
 }
 
-function addScoreAnim() {
-    if (gameManager.scoreJump < gameManager.scoreToAdd) {
-        gameManager.cameraAnimationT += gameManager.cameraAnimationC.getDelta();
-        if (gameManager.cameraAnimationT >= 0.03) {
-            gameManager.score++;
-            gameManager.scoreJump++;
-            gameManager.cameraAnimationT = 0;
-        }
-    }
-    if (gameManager.scoreJump == gameManager.scoreToAdd) {
-        gameManager.scoreJump = 0;
-        gameManager.scoreToAdd = 0;
-        gameManager.scoreAnim = false;
-    }
-}
-
-function animation() {
-
-    if (gameManager.inversion == -1 && gameManager.camera.position.z < 7.2) {
-        gameManager.cameraAnimationT += gameManager.cameraAnimationC.getDelta();
-        if (gameManager.cameraAnimationT >= 0.01) {
-            gameManager.camera.position.z  += 0.1;
-            gameManager.cameraAnimationT = 0;
-        }
-        gameManager.camera.fov = 90;
-        gameManager.camera.updateProjectionMatrix();
-    }
-    else if (gameManager.inversion == 1 && gameManager.camera.position.z > 6.5) {
-        gameManager.cameraAnimationT += gameManager.cameraAnimationC.getDelta();
-        if (gameManager.cameraAnimationT >= 0.01) {
-            gameManager.camera.position.z  -= 0.1;
-            gameManager.cameraAnimationT = 0;
-        }
-        gameManager.camera.fov = 70;
-        gameManager.camera.updateProjectionMatrix();
-    }
-    else {
-        gameManager.cameraAnim = false;
-    }
-}
-
 const clockBH = new THREE.Clock(true);
-const clockLB = new THREE.Clock(true);
 
 function animate(){
     requestAnimationFrame(animate);
-    //gameManager.renderer.render(gameManager.scene, gameManager.camera);
     gameManager.composer.render();
     gameManager.timer.update();
     gameManager.controls.update();
 
     writeScore();
 
-    for (let i = 0; i < gameManager.roads.length; i++) {
-        if (gameManager.roads[i].position.z > 255) {
-            loader.load( 'road.glb', function ( gltf ) {
-                gameManager.roads.push(gltf.scene);
-                gltf.scene.scale.set(1,1,0.8);
-                gltf.scene.position.z = gameManager.roads[i].position.z - 255;
-                gltf.scene.rotation.y = Math.PI / 2;
-                gameManager.scene.add( gltf.scene );
-            }, undefined, function ( error ) {
-                console.log( error );
-            });
-            gameManager.scene.remove(gameManager.roads[i]);
-            gameManager.roads.splice(gameManager.roads.indexOf(gameManager.roads[i]), 1);
-        }
-        if (gameManager.roads[i].position.z < -255) {
-            loader.load( 'road.glb', function ( gltf ) {
-                gameManager.roads.push(gltf.scene);
-                gltf.scene.scale.set(1,1,0.8);
-                gltf.scene.position.z = gameManager.roads[i].position.z + 255;
-                gltf.scene.rotation.y = Math.PI / 2;
-                gameManager.scene.add( gltf.scene );
-            }, undefined, function ( error ) {
-                console.log( error );
-            });
-            gameManager.scene.remove(gameManager.roads[i]);
-            gameManager.roads.splice(gameManager.roads.indexOf(gameManager.roads[i]), 1);
-        }
-        gameManager.roads[i].position.z += 0.07 * gameManager.inversion;
-    }
+    manageRoads(gameManager);
 
     gameManager.cleanBlocks();
 
@@ -248,17 +202,19 @@ function animate(){
     collisionTimer.update();
     gameManager.collisionTime += collisionTimer.getDelta();
     spawnBlocks();
-    if (gameManager.cameraAnim)
+    if (gameManager.event.cameraAnim)
         animation();
     if (gameManager.scoreAnim)
         addScoreAnim(10);
     mixer.update(clockBH.getDelta());
 }
-const [blackhole, road] = await Promise.all([blackHolePromise, roadPromise]).catch((reason) => {
+
+const [blackhole, road, pad, gastly] = await Promise.all([blackHolePromise, roadPromise, padPromise, gastlyPromise]).catch((reason) => {
     console.error(reason);
     return [undefined, undefined];
-})
-if (!blackhole || !road) {
+});
+
+if (!blackhole || !road || !pad || !gastly) {
     alert("merde !");
 } else{
     init();

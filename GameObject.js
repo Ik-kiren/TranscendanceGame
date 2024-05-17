@@ -4,9 +4,8 @@ import { Timer } from 'three/addons/misc/Timer.js';
 import { RenderPass } from 'three/examples/jsm/Addons.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { UnrealBloomPass } from 'three/examples/jsm/Addons.js';
+import { EventManager } from './events.js';
 
-
-import {createLongBox} from './createobject.js';
 import Pad from './Pad.js';
 export default class GameManager {
     scene = new THREE.Scene();
@@ -16,6 +15,9 @@ export default class GameManager {
     composer;
     bloomPass;
 
+    event = new EventManager();
+
+    road;
     roads = [];
 
     controls = new OrbitControls(this.camera, this.renderer.domElement);
@@ -28,33 +30,22 @@ export default class GameManager {
 
     timer = new Timer();
 
-    keymap = new Set();
-
     boxes = [];
-    tabRemains = [];
     boxParams = {
         speed : 0.02,
         positionY : 0.8,
         spawnPosition : 0
     }
 
-    spawnTimer = 4;
+    spawnTimer = 3;
     score = 0;
     rapidBoxBool = false;
     inversion = 1;
-
-    middlePressed = false;
-    rightPressed = false;
-    leftPressed = false;
 
     remains = false;
 
     collisionTime = 0;
     time = 0;
-    
-    cameraAnim = false;
-    cameraAnimationC = new THREE.Clock(true);
-    cameraAnimationT = 0;
 
     scoreAnim = false;
     scoreJump = 0;
@@ -90,14 +81,6 @@ export default class GameManager {
     }
 
     cleanBlocks() {
-        for (let i = 0; i < this.tabRemains.length; i++) {
-            this.tabRemains[i].position.z += this.boxParams.speed * this.inversion;
-            if (this.tabRemains[i].position.z >= 10 || this.tabRemains[i].position.z <= -3){
-                this.scene.remove( this.tabRemains[i]);
-                this.tabRemains.splice(i, 1);
-            }
-        }
-    
         for (let i = 0; i < this.boxes.length; i++) {
             this.boxes[i].position.z += this.boxParams.speed * this.inversion;
             if (this.boxes[i].position.z >= 10 || this.boxes[i].position.z <= -3){
@@ -114,7 +97,7 @@ export default class GameManager {
             this.currentAnim.addEventListener('finished', (e) => {this.currentAnim = undefined,this.scene.remove(box), console.log(this.currentAnim)});
             const action = this.currentAnim.clipAction(this.longBoxAnim);
             action.clampWhenFinished = true;
-            action.setEffectiveTimeScale(2); 
+            action.setEffectiveTimeScale(2);
             action.setLoop(THREE.LoopOnce);
             action.play();
         }
@@ -158,16 +141,17 @@ export default class GameManager {
             minSize = -0.5;
             position = box.position.z;
         } else if (box.name == "longbox") {
-            maxSize = box.children[0].children[1].geometry.boundingBox.max.z;
-            minSize = box.children[0].children[1].geometry.boundingBox.min.z;
+            maxSize = (box.children[0].children[1].geometry.boundingBox.max.z - box.children[0].children[1].geometry.boundingBox.min.z) / 2;
+            minSize = maxSize * -1;
             position = box.position.z;
         } else if (box.name == "rapidbox") {
             maxSize = box.geometry.parameters.length / 2;
             minSize = -1 * (box.geometry.parameters.length / 2);
             position = box.position.z;
         }
+        let sizePad = pad.children[0].children[0].geometry.boundingBox.max.z - pad.children[0].children[0].geometry.boundingBox.min.z;
         for (let i = minSize; i <= maxSize; i += 0.1) {
-            if ((position + i >= (pad.position.z - pad.children[0].children[0].geometry.boundingBox.max.z) && position + i <= (pad.position.z + pad.children[0].children[0].geometry.boundingBox.max.z)) && box.position.x == pad.position.x) {
+            if ((position + i > (pad.position.z - sizePad / 2) && position + i < (pad.position.z + sizePad / 2)) && box.position.x == pad.position.x) {
                 return true;
             }
         }
@@ -182,18 +166,18 @@ export default class GameManager {
 
     collisionBlocksPads() {
         for (let i = 0; i < this.boxes.length; i++) {
-            if (((this.leftPressed && !this.checkCollision(this.boxes[i], this.padLeft.pad) && this.checkSameX(this.boxes[i], this.padLeft.pad)) || (this.middlePressed && !this.checkCollision(this.boxes[i], this.padMiddle.pad) && this.checkSameX(this.boxes[i], this.padMiddle.pad)) || (this.rightPressed && !this.checkCollision(this.boxes[i], this.padRight.pad) && this.checkSameX(this.boxes[i], this.padRight.pad))) && this.collisionTime >= 0.7){
+            if (((this.event.leftPressed && !this.checkCollision(this.boxes[i], this.padLeft.pad) && this.checkSameX(this.boxes[i], this.padLeft.pad)) || (this.event.middlePressed && !this.checkCollision(this.boxes[i], this.padMiddle.pad) && this.checkSameX(this.boxes[i], this.padMiddle.pad)) || (this.event.rightPressed && !this.checkCollision(this.boxes[i], this.padRight.pad) && this.checkSameX(this.boxes[i], this.padRight.pad))) && this.collisionTime >= 0.7){
                 this.wrongHit = true;
                 if (this.score > 9)
                     this.score -= 10;
                 this.collisionTime = 0;
             }
-            if (this.checkCollision(this.boxes[i], this.padMiddle.pad) && this.middlePressed && !this.wrongHit){
-                this.boxHit(this.middlePressed, this.boxes[i], this.padMiddle.pad);
-            } else if (this.checkCollision(this.boxes[i], this.padLeft.pad) && this.leftPressed && !this.wrongHit) {
-                this.boxHit(this.leftPressed, this.boxes[i], this.padLeft.pad);
-            } else if (this.checkCollision(this.boxes[i], this.padRight.pad) && this.rightPressed && !this.wrongHit) {
-                this.boxHit(this.rightPressed, this.boxes[i], this.padRight.pad);
+            if (this.checkCollision(this.boxes[i], this.padMiddle.pad) && this.event.middlePressed && !this.wrongHit){
+                this.boxHit(this.event.middlePressed, this.boxes[i], this.padMiddle.pad);
+            } else if (this.checkCollision(this.boxes[i], this.padLeft.pad) && this.event.leftPressed && !this.wrongHit) {
+                this.boxHit(this.event.leftPressed, this.boxes[i], this.padLeft.pad);
+            } else if (this.checkCollision(this.boxes[i], this.padRight.pad) && this.event.rightPressed && !this.wrongHit) {
+                this.boxHit(this.event.rightPressed, this.boxes[i], this.padRight.pad);
             }
         }
     }
