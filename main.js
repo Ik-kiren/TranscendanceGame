@@ -17,6 +17,25 @@ function loadObject(path) {
     });
 }
 
+const clockBPM = new THREE.Clock(false);
+let timerBPM = 0;
+
+const musicListener = new THREE.AudioListener();
+gameManager.camera.add(musicListener);
+const music = new THREE.Audio(musicListener);
+const musicLoader = new THREE.AudioLoader();
+musicLoader.load( './ado.mp3', function (buffer) {
+    music.setBuffer(buffer);
+    music.setVolume(0.01);
+    window.addEventListener('click', function() {
+        music.play();
+        clockBPM.start();
+    }, undefined, function(error) {
+        console.log(error);
+    });
+});
+
+
 const loaderLB = new GLTFLoader();
 loaderLB.load( 'longPush.glb', function ( gltf ) {
     gameManager.longBox = gltf.scene;
@@ -162,34 +181,76 @@ function init() {
 }
 
 
-function spawnBlocks(){
-    gameManager.time += gameManager.timer.getDelta();
-    if (gameManager.time > gameManager.spawnTimer){
-        let randomBox = randInt(0, 2);
-        if (randomBox == 0) {
-            gameManager.boxes.push(createLongBox(gameManager));
-        }
-        else if (randomBox == 1)
-            gameManager.boxes.push(createBox(gameManager))
-        else if (randomBox == 2)
-            gameManager.boxes.push(createRapidBox(0xcc2062))
+function spawnBlocks(x){
+    //gameManager.time += gameManager.timer.getDelta();
+    //if (gameManager.time > gameManager.spawnTimer){
+       // let randomBox = randInt(0, 2);
+        //if (randomBox == 0) {
+            gameManager.boxes.push(createBox(gameManager));
+        //}
+        //else if (randomBox == 1)
+            //gameManager.boxes.push(createLongBox(gameManager))
+       // else if (randomBox == 2)
+            //gameManager.boxes.push(createRapidBox(0xcc2062))
         console.log(gameManager.boxes[gameManager.boxes.length - 1]);
         gameManager.scene.add(gameManager.boxes[gameManager.boxes.length - 1]);
         gameManager.boxes[gameManager.boxes.length - 1].position.z = gameManager.boxParams.spawnPosition;
         gameManager.boxes[gameManager.boxes.length - 1].position.y = gameManager.boxParams.positionY;
-        gameManager.boxes[gameManager.boxes.length - 1].position.x = randInt(-1,1);
+        gameManager.boxes[gameManager.boxes.length - 1].position.x = x;
         gameManager.time = 0;
-    }
+    //}
 }
 
 const clockBH = new THREE.Clock(true);
+
+const analyzer = new THREE.AudioAnalyser(music, 32);
+
+let songposition = 0;
+let secperbeat = 60 / 132;
+let lastsp = 0;
+
+let notes = [[6, 0], [10, 1], [18, 0], [19, -1], [19.5, 1], [20, 0], [20.5, -1], [21, 1], [21, 1], [21.5, 0], [24, 1], [25, 0], [26, -1], [29.5, 0], [30.5, -1], [31.5, 0], [33, 0], [33.25, -1],[33.5, 1], [34, 0],
+    [34.5, -1], [35, 0], [35.5, 1], [36, 0], [36.5,-1], [37, 0], [37.5, 1], [38, 0], [38.5, -1], [39, 0], [39.5, 1], [40, 0], [40.5, -1], [41, 0], [41.5, 1], [42, 0],
+    [42.5, -1], [43, 0], [43.5, 1], [44, 0], [46, 1], [46, -1], [47, 1], [47, -1], [48, 1], [48, -1], [50, 0],
+    [51, -1], [52, 1], [53, -1], [54, 0], [55, 1], [56, -1], [57, 1], [58, -1], [59, -1], [60, 1], [61, 0], [62, 0]];
+
+/*let notes = [[6, 0], [10, 1], [18, -1], [19.5, 0], [20, 1], [20.5, 0], [21, -1], [22, 0], [24, 1], [25, 0], [26, -1], [29.5, 0], [30.5, -1], [31.5, 0], [33.5, 1], [34, 0],
+    [34.5, -1], [35, 0], [35.5, 1], [36, 0], [36.5,-1], [37, 0], [37.5, 1], [38, 0], [38.5, -1], [39, 0], [39.5, 1], [40, 0], [40.5, -1], [41, 0], [41.5, 1], [42, 0],
+    [42.5, -1], [43, 0], [43.5, 1], [44, 0], [46, 1], [46, -1], [47, 1], [47, -1], [48, 1], [48, -1], [50, 0],
+    [51, -1], [52, 1], [53, -1], [54, 0], [55, 1], [56, -1], [57, 1], [58, -1], [59, -1], [60, 1], [61, 0], [62, 0]];*/
+
+let nextNote = 0;
+
+/*for (let i = 6; i < 200; i++) {
+    notes.push(i);
+}*/
 
 function animate(){
     requestAnimationFrame(animate);
     gameManager.composer.render();
     gameManager.timer.update();
     gameManager.controls.update();
-
+    if (music.isPlaying) {
+        gameManager.bloomPass.strength = 0.3 + (analyzer.getAverageFrequency() / 200);
+        songposition = music.source.context.currentTime;
+        lastsp = gameManager.songposinbeat;
+        gameManager.songposinbeat = songposition / secperbeat;
+        //console.log("songposbeat = " + gameManager.songposinbeat);
+        timerBPM += gameManager.songposinbeat - lastsp;
+        //console.log("timer = " + timerBPM);
+        if (music.isPlaying && nextNote < notes.length && notes[nextNote][0] <= gameManager.songposinbeat + 3) {
+            spawnBlocks(notes[nextNote][1]);
+            //console.log("bpm");
+            timerBPM = 0;
+            nextNote++;
+        }
+        if (timerBPM >= 0.01) {
+            for (let i = 0; i < gameManager.boxes.length; i++) {
+                gameManager.boxes[i].position.z += gameManager.boxParams.speed * gameManager.inversion;
+            }
+            timerBPM = 0;
+        }
+    }
     writeScore();
 
     manageRoads(gameManager);
@@ -201,7 +262,6 @@ function animate(){
    
     collisionTimer.update();
     gameManager.collisionTime += collisionTimer.getDelta();
-    spawnBlocks();
     if (gameManager.event.cameraAnim)
         animation();
     if (gameManager.scoreAnim)

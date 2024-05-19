@@ -32,7 +32,7 @@ export default class GameManager {
 
     boxes = [];
     boxParams = {
-        speed : 0.02,
+        speed : 0.021,
         positionY : 0.8,
         spawnPosition : 0
     }
@@ -61,6 +61,8 @@ export default class GameManager {
 
     pad;
 
+    songposinbeat = 0;
+
     constructor() {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.toneMapping = THREE.CineonMapping;
@@ -82,7 +84,7 @@ export default class GameManager {
 
     cleanBlocks() {
         for (let i = 0; i < this.boxes.length; i++) {
-            this.boxes[i].position.z += this.boxParams.speed * this.inversion;
+            //this.boxes[i].position.z += this.boxParams.speed * this.inversion;
             if (this.boxes[i].position.z >= 10 || this.boxes[i].position.z <= -3){
                 this.scene.remove(this.boxes[i]);
                 this.boxes.splice(i, 1);
@@ -125,6 +127,8 @@ export default class GameManager {
             this.rapidboxhit(box);
             this.rapidBoxBool = true;
         } else if (box.name == "box") {
+            console.log(box.position.z);
+            console.log(this.songposinbeat);
             this.scene.remove(box);
             this.boxes.splice(this.boxes.indexOf(box), 1);
             this.scoreAnim = true;
@@ -137,8 +141,8 @@ export default class GameManager {
         let minSize;
         let position;
         if (box.name == "box") {
-            maxSize = 0.5;
-            minSize = -0.5;
+            maxSize = 0.1;
+            minSize = -0.1;
             position = box.position.z;
         } else if (box.name == "longbox") {
             maxSize = (box.children[0].children[1].geometry.boundingBox.max.z - box.children[0].children[1].geometry.boundingBox.min.z) / 2;
@@ -151,7 +155,7 @@ export default class GameManager {
         }
         let sizePad = pad.children[0].children[0].geometry.boundingBox.max.z - pad.children[0].children[0].geometry.boundingBox.min.z;
         for (let i = minSize; i <= maxSize; i += 0.1) {
-            if ((position + i > (pad.position.z - sizePad / 2) && position + i < (pad.position.z + sizePad / 2)) && box.position.x == pad.position.x) {
+            if ((position + i > (pad.position.z - sizePad / 8) && position + i < (pad.position.z + sizePad / 8)) && box.position.x == pad.position.x) {
                 return true;
             }
         }
