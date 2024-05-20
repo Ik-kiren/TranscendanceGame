@@ -28,7 +28,7 @@ export class EventManager {
             gameManager.scene.remove(gameManager.blackHole);
         }
         for (let i = 0; i < gameManager.boxes.length; i++) {
-            gameManager.scene.remove(gameManager.boxes[i]);   
+            gameManager.scene.remove(gameManager.boxes[i][0]);   
         }
     }
 

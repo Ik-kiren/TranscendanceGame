@@ -186,17 +186,16 @@ function spawnBlocks(nextNote){
     //if (gameManager.time > gameManager.spawnTimer){
        // let randomBox = randInt(0, 2);
         //if (randomBox == 0) {
-            gameManager.boxes.push([createBox(gameManager), nextNote[0]]);
+            gameManager.boxes.push([createBox(gameManager), nextNote]);
         //}
         //else if (randomBox == 1)
             //gameManager.boxes.push(createLongBox(gameManager))
        // else if (randomBox == 2)
             //gameManager.boxes.push(createRapidBox(0xcc2062))
         //console.log(gameManager.boxes[gameManager.boxes.length - 1][0]);
-        console.log(gameManager.boxes[gameManager.boxes.length - 1]);
         gameManager.boxes[gameManager.boxes.length - 1][0].position.z = gameManager.boxParams.spawnPosition;
         gameManager.boxes[gameManager.boxes.length - 1][0].position.y = gameManager.boxParams.positionY;
-        gameManager.boxes[gameManager.boxes.length - 1][0].position.x = gameManager.boxes[gameManager.boxes.length - 1][1];
+        gameManager.boxes[gameManager.boxes.length - 1][0].position.x = gameManager.boxes[gameManager.boxes.length - 1][1][1];
         gameManager.scene.add(gameManager.boxes[gameManager.boxes.length - 1][0]);
         gameManager.time = 0;
     //}
@@ -255,7 +254,7 @@ function animate(){
             //if (timerBPM >= 0.01) {
                 for (let i = 0; i < gameManager.boxes.length; i++) {
                     //gameManager.boxes[i].position.z += gameManager.boxParams.speed * gameManager.inversion;
-                    gameManager.boxes[i][0].position.lerpVectors(new THREE.Vector3(0, gameManager.boxParams.positionY, 0), new THREE.Vector3(0, gameManager.boxParams.positionY, 3), (3 - (gameManager.boxes[i][1] - gameManager.songposinbeat)) / 3);
+                    gameManager.boxes[i][0].position.lerpVectors(new THREE.Vector3(gameManager.boxes[i][1][1], gameManager.boxParams.positionY, 0), new THREE.Vector3(gameManager.boxes[i][1][1], gameManager.boxParams.positionY, 3), (3 - (gameManager.boxes[i][1][0] - gameManager.songposinbeat)) / 3);
                 }
                 timerBPM = 0;
             //}

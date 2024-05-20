@@ -112,7 +112,11 @@ export default class GameManager {
         this.scoreToAdd += 10;
         if (box.scale.z < 0.2) {
             this.scene.remove(box);
-            this.boxes.splice(this.boxes.indexOf(box), 1);
+            for (let i = 0; i < this.boxes.length; i++) {
+                if (this.boxes[i][0] == box) {
+                    this.boxes.splice(i, 1);
+                }
+            }
         }
         else {
             box.scale.set(box.scale.x, box.scale.y, box.scale.z - 0.09);
@@ -129,8 +133,12 @@ export default class GameManager {
         } else if (box.name == "box") {
             console.log(box.position.z);
             console.log(this.songposinbeat);
+            for (let i = 0; i < this.boxes.length; i++) {
+                if (this.boxes[i][0] == box) {
+                    this.boxes.splice(i, 1);
+                }
+            }
             this.scene.remove(box);
-            this.boxes.splice(this.boxes.indexOf(box), 1);
             this.scoreAnim = true;
             this.scoreToAdd += 10;
         }
