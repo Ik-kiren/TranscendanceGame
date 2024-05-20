@@ -181,22 +181,23 @@ function init() {
 }
 
 
-function spawnBlocks(x){
+function spawnBlocks(nextNote){
     //gameManager.time += gameManager.timer.getDelta();
     //if (gameManager.time > gameManager.spawnTimer){
        // let randomBox = randInt(0, 2);
         //if (randomBox == 0) {
-            gameManager.boxes.push(createBox(gameManager));
+            gameManager.boxes.push([createBox(gameManager), nextNote[0]]);
         //}
         //else if (randomBox == 1)
             //gameManager.boxes.push(createLongBox(gameManager))
        // else if (randomBox == 2)
             //gameManager.boxes.push(createRapidBox(0xcc2062))
+        //console.log(gameManager.boxes[gameManager.boxes.length - 1][0]);
         console.log(gameManager.boxes[gameManager.boxes.length - 1]);
-        gameManager.scene.add(gameManager.boxes[gameManager.boxes.length - 1]);
-        gameManager.boxes[gameManager.boxes.length - 1].position.z = gameManager.boxParams.spawnPosition;
-        gameManager.boxes[gameManager.boxes.length - 1].position.y = gameManager.boxParams.positionY;
-        gameManager.boxes[gameManager.boxes.length - 1].position.x = x;
+        gameManager.boxes[gameManager.boxes.length - 1][0].position.z = gameManager.boxParams.spawnPosition;
+        gameManager.boxes[gameManager.boxes.length - 1][0].position.y = gameManager.boxParams.positionY;
+        gameManager.boxes[gameManager.boxes.length - 1][0].position.x = gameManager.boxes[gameManager.boxes.length - 1][1];
+        gameManager.scene.add(gameManager.boxes[gameManager.boxes.length - 1][0]);
         gameManager.time = 0;
     //}
 }
@@ -205,7 +206,6 @@ const clockBH = new THREE.Clock(true);
 
 const analyzer = new THREE.AudioAnalyser(music, 32);
 
-let songposition = 0;
 let secperbeat = 60 / 132;
 let lastsp = 0;
 
@@ -229,6 +229,7 @@ let clockFPS = new THREE.Clock();
 let delta = 0;
 let fps = 1 / 60;
 
+
 function animate(){
     requestAnimationFrame(animate);
     delta += clockFPS.getDelta();
@@ -239,24 +240,25 @@ function animate(){
         gameManager.controls.update();
         if (music.isPlaying) {
             gameManager.bloomPass.strength = 0.3 + (analyzer.getAverageFrequency() / 200);
-            songposition = music.source.context.currentTime;
             lastsp = gameManager.songposinbeat;
-            gameManager.songposinbeat = songposition / secperbeat;
+            gameManager.songposinbeat = music.source.context.currentTime / secperbeat;
             //console.log("songposbeat = " + gameManager.songposinbeat);
             timerBPM += gameManager.songposinbeat - lastsp;
+            //timerBPM += clockBPM.getDelta();
             //console.log("timer = " + timerBPM);
             if (music.isPlaying && nextNote < notes.length && notes[nextNote][0] <= gameManager.songposinbeat + 3) {
-                spawnBlocks(notes[nextNote][1]);
+                spawnBlocks(notes[nextNote]);
                 //console.log("bpm");
                 timerBPM = 0;
                 nextNote++;
             }
-            if (timerBPM >= 0.01) {
+            //if (timerBPM >= 0.01) {
                 for (let i = 0; i < gameManager.boxes.length; i++) {
-                    gameManager.boxes[i].position.z += gameManager.boxParams.speed * gameManager.inversion;
+                    //gameManager.boxes[i].position.z += gameManager.boxParams.speed * gameManager.inversion;
+                    gameManager.boxes[i][0].position.lerpVectors(new THREE.Vector3(0, gameManager.boxParams.positionY, 0), new THREE.Vector3(0, gameManager.boxParams.positionY, 3), (3 - (gameManager.boxes[i][1] - gameManager.songposinbeat)) / 3);
                 }
                 timerBPM = 0;
-            }
+            //}
         }
         writeScore();
 

@@ -32,7 +32,7 @@ export default class GameManager {
 
     boxes = [];
     boxParams = {
-        speed : 0.045,
+        speed : 0.04,
         positionY : 0.8,
         spawnPosition : 0
     }
@@ -84,9 +84,9 @@ export default class GameManager {
 
     cleanBlocks() {
         for (let i = 0; i < this.boxes.length; i++) {
-            //this.boxes[i].position.z += this.boxParams.speed * this.inversion;
-            if (this.boxes[i].position.z >= 10 || this.boxes[i].position.z <= -3){
-                this.scene.remove(this.boxes[i]);
+            //this.boxes[i][0].position.z += this.boxParams.speed * this.inversion;
+            if (this.boxes[i][0].position.z >= 10 || this.boxes[i][0].position.z <= -3){
+                this.scene.remove(this.boxes[i][0]);
                 this.boxes.splice(i, 1);
             }
         }
@@ -170,18 +170,18 @@ export default class GameManager {
 
     collisionBlocksPads() {
         for (let i = 0; i < this.boxes.length; i++) {
-            if (((this.event.leftPressed && !this.checkCollision(this.boxes[i], this.padLeft.pad) && this.checkSameX(this.boxes[i], this.padLeft.pad)) || (this.event.middlePressed && !this.checkCollision(this.boxes[i], this.padMiddle.pad) && this.checkSameX(this.boxes[i], this.padMiddle.pad)) || (this.event.rightPressed && !this.checkCollision(this.boxes[i], this.padRight.pad) && this.checkSameX(this.boxes[i], this.padRight.pad))) && this.collisionTime >= 0.7){
+            if (((this.event.leftPressed && !this.checkCollision(this.boxes[i][0], this.padLeft.pad) && this.checkSameX(this.boxes[i][0], this.padLeft.pad)) || (this.event.middlePressed && !this.checkCollision(this.boxes[i][0], this.padMiddle.pad) && this.checkSameX(this.boxes[i][0], this.padMiddle.pad)) || (this.event.rightPressed && !this.checkCollision(this.boxes[i][0], this.padRight.pad) && this.checkSameX(this.boxes[i][0], this.padRight.pad))) && this.collisionTime >= 0.7){
                 this.wrongHit = true;
                 if (this.score > 9)
                     this.score -= 10;
                 this.collisionTime = 0;
             }
-            if (this.checkCollision(this.boxes[i], this.padMiddle.pad) && this.event.middlePressed && !this.wrongHit){
-                this.boxHit(this.event.middlePressed, this.boxes[i], this.padMiddle.pad);
-            } else if (this.checkCollision(this.boxes[i], this.padLeft.pad) && this.event.leftPressed && !this.wrongHit) {
-                this.boxHit(this.event.leftPressed, this.boxes[i], this.padLeft.pad);
-            } else if (this.checkCollision(this.boxes[i], this.padRight.pad) && this.event.rightPressed && !this.wrongHit) {
-                this.boxHit(this.event.rightPressed, this.boxes[i], this.padRight.pad);
+            if (this.checkCollision(this.boxes[i][0], this.padMiddle.pad) && this.event.middlePressed && !this.wrongHit){
+                this.boxHit(this.event.middlePressed, this.boxes[i][0], this.padMiddle.pad);
+            } else if (this.checkCollision(this.boxes[i][0], this.padLeft.pad) && this.event.leftPressed && !this.wrongHit) {
+                this.boxHit(this.event.leftPressed, this.boxes[i][0], this.padLeft.pad);
+            } else if (this.checkCollision(this.boxes[i][0], this.padRight.pad) && this.event.rightPressed && !this.wrongHit) {
+                this.boxHit(this.event.rightPressed, this.boxes[i][0], this.padRight.pad);
             }
         }
     }
