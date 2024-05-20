@@ -26,7 +26,7 @@ const music = new THREE.Audio(musicListener);
 const musicLoader = new THREE.AudioLoader();
 musicLoader.load( './ado.mp3', function (buffer) {
     music.setBuffer(buffer);
-    music.setVolume(0.01);
+    music.setVolume(0.02);
     window.addEventListener('click', function() {
         music.play();
         clockBPM.start();
@@ -209,10 +209,10 @@ let songposition = 0;
 let secperbeat = 60 / 132;
 let lastsp = 0;
 
-let notes = [[6, 0], [10, 1], [18, 0], [19, -1], [19.5, 1], [20, 0], [20.5, -1], [21, 1], [21, 1], [21.5, 0], [24, 1], [25, 0], [26, -1], [29.5, 0], [30.5, -1], [31.5, 0], [33, 0], [33.25, -1],[33.5, 1], [34, 0],
+let notes = [[6, 0], [10, 1], [18, 0], [19.5, 1], [20, 0], [20.5, -1], [21, 1], [21, 1], [21.5, 0], [24, 1], [25, 0], [26, -1], [29.5, 0], [30.5, -1], [31.5, 0], [33, 0], [33.5, 1], [34, 0],
     [34.5, -1], [35, 0], [35.5, 1], [36, 0], [36.5,-1], [37, 0], [37.5, 1], [38, 0], [38.5, -1], [39, 0], [39.5, 1], [40, 0], [40.5, -1], [41, 0], [41.5, 1], [42, 0],
     [42.5, -1], [43, 0], [43.5, 1], [44, 0], [46, 1], [46, -1], [47, 1], [47, -1], [48, 1], [48, -1], [50, 0],
-    [51, -1], [52, 1], [53, -1], [54, 0], [55, 1], [56, -1], [57, 1], [58, -1], [59, -1], [60, 1], [61, 0], [62, 0]];
+    [51, -1], [52, 1], [53, -1], [54, 0], [55, 1], [56, -1], [57, 1], [58, -1], [59, -1], [60, 1], [61, 0], [62, 0], [63, 1], [64, 1], [65, 0], [66, -1], [67, -1]];
 
 /*let notes = [[6, 0], [10, 1], [18, -1], [19.5, 0], [20, 1], [20.5, 0], [21, -1], [22, 0], [24, 1], [25, 0], [26, -1], [29.5, 0], [30.5, -1], [31.5, 0], [33.5, 1], [34, 0],
     [34.5, -1], [35, 0], [35.5, 1], [36, 0], [36.5,-1], [37, 0], [37.5, 1], [38, 0], [38.5, -1], [39, 0], [39.5, 1], [40, 0], [40.5, -1], [41, 0], [41.5, 1], [42, 0],
@@ -225,48 +225,57 @@ let nextNote = 0;
     notes.push(i);
 }*/
 
+let clockFPS = new THREE.Clock();
+let delta = 0;
+let fps = 1 / 60;
+
 function animate(){
     requestAnimationFrame(animate);
-    gameManager.composer.render();
-    gameManager.timer.update();
-    gameManager.controls.update();
-    if (music.isPlaying) {
-        gameManager.bloomPass.strength = 0.3 + (analyzer.getAverageFrequency() / 200);
-        songposition = music.source.context.currentTime;
-        lastsp = gameManager.songposinbeat;
-        gameManager.songposinbeat = songposition / secperbeat;
-        //console.log("songposbeat = " + gameManager.songposinbeat);
-        timerBPM += gameManager.songposinbeat - lastsp;
-        //console.log("timer = " + timerBPM);
-        if (music.isPlaying && nextNote < notes.length && notes[nextNote][0] <= gameManager.songposinbeat + 3) {
-            spawnBlocks(notes[nextNote][1]);
-            //console.log("bpm");
-            timerBPM = 0;
-            nextNote++;
-        }
-        if (timerBPM >= 0.01) {
-            for (let i = 0; i < gameManager.boxes.length; i++) {
-                gameManager.boxes[i].position.z += gameManager.boxParams.speed * gameManager.inversion;
+    delta += clockFPS.getDelta();
+
+    if (delta > fps) {
+        gameManager.composer.render();
+        gameManager.timer.update();
+        gameManager.controls.update();
+        if (music.isPlaying) {
+            gameManager.bloomPass.strength = 0.3 + (analyzer.getAverageFrequency() / 200);
+            songposition = music.source.context.currentTime;
+            lastsp = gameManager.songposinbeat;
+            gameManager.songposinbeat = songposition / secperbeat;
+            //console.log("songposbeat = " + gameManager.songposinbeat);
+            timerBPM += gameManager.songposinbeat - lastsp;
+            //console.log("timer = " + timerBPM);
+            if (music.isPlaying && nextNote < notes.length && notes[nextNote][0] <= gameManager.songposinbeat + 3) {
+                spawnBlocks(notes[nextNote][1]);
+                //console.log("bpm");
+                timerBPM = 0;
+                nextNote++;
             }
-            timerBPM = 0;
+            if (timerBPM >= 0.01) {
+                for (let i = 0; i < gameManager.boxes.length; i++) {
+                    gameManager.boxes[i].position.z += gameManager.boxParams.speed * gameManager.inversion;
+                }
+                timerBPM = 0;
+            }
         }
+        writeScore();
+
+        manageRoads(gameManager);
+
+        gameManager.cleanBlocks();
+
+        let tabintersect = [];
+        gameManager.collisionBlocksPads(tabintersect);
+    
+        collisionTimer.update();
+        gameManager.collisionTime += collisionTimer.getDelta();
+        if (gameManager.event.cameraAnim)
+            animation();
+        if (gameManager.scoreAnim)
+            addScoreAnim(10);
+        mixer.update(clockBH.getDelta());
+        delta = delta % fps;
     }
-    writeScore();
-
-    manageRoads(gameManager);
-
-    gameManager.cleanBlocks();
-
-    let tabintersect = [];
-    gameManager.collisionBlocksPads(tabintersect);
-   
-    collisionTimer.update();
-    gameManager.collisionTime += collisionTimer.getDelta();
-    if (gameManager.event.cameraAnim)
-        animation();
-    if (gameManager.scoreAnim)
-        addScoreAnim(10);
-    mixer.update(clockBH.getDelta());
 }
 
 const [blackhole, road, pad, gastly] = await Promise.all([blackHolePromise, roadPromise, padPromise, gastlyPromise]).catch((reason) => {

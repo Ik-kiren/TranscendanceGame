@@ -32,7 +32,7 @@ export default class GameManager {
 
     boxes = [];
     boxParams = {
-        speed : 0.021,
+        speed : 0.045,
         positionY : 0.8,
         spawnPosition : 0
     }
