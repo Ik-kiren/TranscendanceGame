@@ -3,7 +3,7 @@ import { gameManager } from './main';
 
 function createBox(gameManager) {
     let box = gameManager.box.clone();
-    box.scale.set(0.005, 0.005, 0.005);
+    box.scale.set(0.0035, 0.0035, 0.0035);
     box.name = "box";
     return box;
 }
