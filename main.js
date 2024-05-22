@@ -18,7 +18,6 @@ function loadObject(path) {
 }
 
 const clockBPM = new THREE.Clock(false);
-let timerBPM = 0;
 
 const musicListener = new THREE.AudioListener();
 gameManager.camera.add(musicListener);
@@ -186,7 +185,10 @@ function spawnBlocks(nextNote){
     //if (gameManager.time > gameManager.spawnTimer){
        // let randomBox = randInt(0, 2);
         //if (randomBox == 0) {
-            gameManager.boxes.push([createBox(gameManager), nextNote]);
+            if (nextNote[2] >= 1)
+                gameManager.boxes.push([createLongBox(gameManager, nextNote[2]), nextNote]);
+            else
+                gameManager.boxes.push([createBox(gameManager), nextNote]);
         //}
         //else if (randomBox == 1)
             //gameManager.boxes.push(createLongBox(gameManager))
@@ -208,14 +210,17 @@ const analyzer = new THREE.AudioAnalyser(music, 32);
 let secperbeat = 60 / 132;
 let lastsp = 0;
 
-let notes = [[6, 0], [10, 1], [18, 0], [20, 0], [20.5, -1], [21, 1], [21.5, 0], [22, -1], [24, 1], [25, 0], [26, -1], [30, 0], [31, -1], [32, 0], [33, 0], [34, 0],
+let notes = [[6, -1, 2], [10, 1, 2], [18, 0], [20, 0], [20.5, -1], [21, 1], [21.5, 0], [22, -1], [24, 1], [25, 0], [26, -1], [30, 0], [31, -1], [32, 0], [33, 0], [34, 0],
     [34.5, -1], [35, 0], [35.5, 1], [36, 0], [36.5,-1], [37, 0], [37.5, 1], [38, 0], [38.5, -1], [39, 0], [39.5, 1], [40, 0], [40.5, -1], [41, 0], [41.5, 1], [42, 0],
     [42.5, -1], [43, 0], [43.5, 1], [44, 0], [46, 1], [46, -1], [47, 1], [47, -1], [48, 1], [48, -1], [50, 1], [51, 0], [51.25, 1], [52, 1],
     [53, 0], [53.25, 1], [54, 1], [55, 0], [55.25, 1], [56, 1], [57, 0], [57.25, 1], [58, 1], [59, 0], [59.25, 1], [60, 1], [61, 0], [61.25, 1], [62, 1], [63, 0], [63.25, 1], [64, 1], [65, 0], [65.25, 1], [66, 1], [67, 0],
     [67.25, 1], [68, 1], [69, 0], [69.25, 1], [70, 1], [70, 0], [71, 1], [71, 0], [71.5, 1], [71.5, 0], [72, 1], [72, 0], [73, -1], [74, 0], [74.25, -1], [75, -1], [76, 0], [76.25, -1], [77, -1], [78, 0],
-    [78.25, -1], [79, 0], [79.5, 0], [81, 1], [82, 0], [82.25, 1], [83, 1], [84, 0], [84.25, 1], [85, 1], [86, 0], [86.25, 1], [87, 1], [88, 0], [88.25, 1], [89, 1], [90, 0], [90.25, 1], [91, 1], [92, 0], [92.25, 1],
-    [93, 1], [94, 0], [94.5, 1], [95, 1], [96, 0], [96.25, 1], [97, 1], [98, 0], [98.25, 1], [99, 1], [100, 0], [100.25, 1], [101, 1], [102, 0], [102.25, 1], [103, 1], [104, 0], [104.25, 1], [105, 1], [106, 0],
-    [106.25, 1], [107, 1], [108, 0], [108.25, 1], [109, 1], [110, 0], [110.25, 1]];
+    [78.25, -1], [79, 0], [79.5, 0], [82, 1], [83, 0], [83.25, 1], [84, 1], [85, 0], [85.25, 1], [86, 1], [87, 0], [87.25, 1], [88, 1], [89, 0], [89.25, 1], [90, 1], [91, 0], [91.25, 1], [92, 1], [93, 0], [93.25, 1],
+    [94, 1], [95, 0], [95.5, 1], [96, 1], [97, 0], [97.25, 1], [98, 1], [99, 0], [99.25, 1], [100, 1], [101, 0], [101.25, 1], [102, 1], [103, 0], [103.25, 1], [104, 1], [105, 0], [105.25, 1], [106, 1], [107, 0],
+    [107.25, 1], [108, 1], [109, 0], [109.25, 1], [110, 1], [111, 0], [111.25, 1], [114, 0], [115, 0], [116, 0], [117, 0], [118, 0], [119, 0], [120, 0], [121, 0], [122, 0], [123, 0], [124, 0], [125, 0], [126, 0],
+    [127, 0], [128, 0], [129, 0], [130, 0], [131, 0], [132, 0], [133, 0], [134, 0], [135, 0], [136, 0], [137, 0], [138, 0], [139, 0], [140, 0], [141, 0], [143, 0], [143, -1], [143, 1], [143.5, 0], [143.5, -1], [143.5, 1],
+    [144, 0], [144, 1], [144, -1], [144.5, 0], [144.5, 1], [144.5, -1], [146, -1], [147, 0], [147.25, -1], [148, -1], [149, 0], [149.25, -1], [150, -1], [151, 0], [151.25, -1], [152, -1], [153, 0], [153.25, -1], [154, -1],
+    [155, 0], [155.25, -1], [156, -1], [157, 0], [157.25, -1], [158, -1], [159, 0], [159.25, -1], [160, -1], [161, 0], [161.5, -1], [162, -1], [163, 0], [163.5, -1], [164, -1], [165, 0], [165.5, -1], [166, -1], [167, 0], [167.5, -1]];
 
 /*let notes = [[6, 0], [10, 1], [18, -1], [19.5, 0], [20, 1], [20.5, 0], [21, -1], [22, 0], [24, 1], [25, 0], [26, -1], [29.5, 0], [30.5, -1], [31.5, 0], [33.5, 1], [34, 0],
     [34.5, -1], [35, 0], [35.5, 1], [36, 0], [36.5,-1], [37, 0], [37.5, 1], [38, 0], [38.5, -1], [39, 0], [39.5, 1], [40, 0], [40.5, -1], [41, 0], [41.5, 1], [42, 0],
@@ -246,22 +251,20 @@ function animate(){
             lastsp = gameManager.songposinbeat;
             gameManager.songposinbeat = music.source.context.currentTime / secperbeat;
             //console.log("songposbeat = " + gameManager.songposinbeat);
-            timerBPM += gameManager.songposinbeat - lastsp;
-            //timerBPM += clockBPM.getDelta();
-            //console.log("timer = " + timerBPM);
+            gameManager.timerBeat = gameManager.songposinbeat - lastsp;
+            //gameManager.timerBeat += clockBPM.getDelta();
+            //console.log("timer = " + gameManager.timerBeat);
             if (music.isPlaying && nextNote < notes.length && notes[nextNote][0] <= gameManager.songposinbeat + 3) {
                 spawnBlocks(notes[nextNote]);
                 //console.log("bpm");
-                timerBPM = 0;
                 nextNote++;
             }
-            //if (timerBPM >= 0.01) {
-                for (let i = 0; i < gameManager.boxes.length; i++) {
-                    //gameManager.boxes[i].position.z += gameManager.boxParams.speed * gameManager.inversion;
+            for (let i = 0; i < gameManager.boxes.length; i++) {
+                if (gameManager.boxes[i][0].name == "longbox" && ((gameManager.checkCollision(gameManager.boxes[i][0], gameManager.padLeft.pad) && gameManager.event.leftPressed) || (gameManager.checkCollision(gameManager.boxes[i][0], gameManager.padMiddle.pad) && gameManager.event.middlePressed) || (gameManager.checkCollision(gameManager.boxes[i][0], gameManager.padRight.pad) && gameManager.event.rightPressed))){
+                    gameManager.boxes[i][0].position.z = 3;
+                } else
                     gameManager.boxes[i][0].position.lerpVectors(new THREE.Vector3(gameManager.boxes[i][1][1], gameManager.boxParams.positionY, 0), new THREE.Vector3(gameManager.boxes[i][1][1], gameManager.boxParams.positionY, 3), (3 - (gameManager.boxes[i][1][0] - gameManager.songposinbeat)) / 3);
-                }
-                timerBPM = 0;
-            //}
+            }
         }
         writeScore();
 

@@ -62,6 +62,9 @@ export default class GameManager {
     pad;
 
     songposinbeat = 0;
+    timerBeat;
+
+    boxesAnim = [];
 
     constructor() {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -79,7 +82,8 @@ export default class GameManager {
         );
         this.composer.addPass(this.bloomPass);
         this.clockAnim = new THREE.Clock();
-        this.currentAnim = undefined;
+        this.currentAnim = [];
+        this.currentAnimBool = false;
     }
 
     cleanBlocks() {
@@ -93,18 +97,28 @@ export default class GameManager {
     }
 
     longboxHit(box){
-        box.position.z -= this.boxParams.speed * this.inversion;
-        if (this.currentAnim == undefined){
-            this.currentAnim = new THREE.AnimationMixer(box);
-            this.currentAnim.addEventListener('finished', (e) => {this.currentAnim = undefined,this.scene.remove(box), console.log(this.currentAnim)});
-            const action = this.currentAnim.clipAction(this.longBoxAnim);
+        
+        if (this.boxesAnim.indexOf(box) == -1){
+            this.currentAnim.push(new THREE.AnimationMixer(box));
+            this.currentAnim[this.currentAnim.length - 1].addEventListener('finished', (e) => {
+                this.currentAnimBool = false,
+                this.scene.remove(box),
+                this.boxesAnim.slice(0, 1),
+                console.log(this.currentAnim)
+            });
+            const action = this.currentAnim[this.currentAnim.length - 1].clipAction(this.longBoxAnim);
             action.clampWhenFinished = true;
-            action.setEffectiveTimeScale(2);
+            action.setEffectiveTimeScale(1);
             action.setLoop(THREE.LoopOnce);
             action.play();
+            this.boxesAnim.push(box);
+        } else {
+            console.log(this.timerBeat);
+            for (let i = 0; i < this.currentAnim.length; i++) {
+                this.currentAnim[i].update(this.timerBeat);
+            }
+            //this.currentAnim.update(this.timerBeat);
         }
-        else (this.currentAnim != undefined)
-            this.currentAnim.update(this.clockAnim.getDelta());
     }
 
     rapidboxhit(box) {

@@ -8,9 +8,9 @@ function createBox(gameManager) {
     return box;
 }
 
-function createLongBox(gameManager) {
+function createLongBox(gameManager, size) {
     let longBox = gameManager.longBox.clone();
-    longBox.scale.set(0.25, 0.25, 0.25);
+    longBox.scale.set(0.25, 0.25, 0.25 * size);
     if(gameManager.inversion == -1)
             longBox.rotation.set(0, Math.PI, 0);
     longBox.name = "longbox";
