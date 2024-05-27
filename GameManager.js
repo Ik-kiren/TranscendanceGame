@@ -98,7 +98,6 @@ export default class GameManager {
     }
 
     longboxHit(box){
-        
         if (this.boxesAnim.indexOf(box) == -1){
             this.currentAnim.push(new THREE.AnimationMixer(box));
             this.currentAnim[this.currentAnim.length - 1].addEventListener('finished', (e) => {
@@ -107,7 +106,6 @@ export default class GameManager {
                 this.boxesAnim.slice(0, 1),
                 console.log(this.currentAnim)
             });
-            console.log(box.scale);
             const action = this.currentAnim[this.currentAnim.length - 1].clipAction(this.longBoxAnim);
             action.clampWhenFinished = true;
             action.setEffectiveTimeScale(0.5 / box.scale.z);
@@ -115,7 +113,6 @@ export default class GameManager {
             action.play();
             this.boxesAnim.push(box);
         } else {
-            //console.log(this.timerBeat);
             for (let i = 0; i < this.currentAnim.length; i++) {
                 this.currentAnim[i].update(this.timerBeat);
             }
