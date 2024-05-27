@@ -246,7 +246,6 @@ let clockFPS = new THREE.Clock();
 let delta = 0;
 let fps = 1 / 60;
 
-
 function animate(){
     requestAnimationFrame(animate);
     delta += clockFPS.getDelta();
@@ -259,7 +258,7 @@ function animate(){
             gameManager.bloomPass.strength = 0.3 + (analyzer.getAverageFrequency() / 200);
             lastsp = gameManager.songposinbeat;
             gameManager.songposinbeat = music.source.context.currentTime / secperbeat;
-            console.log("songposbeat = " + gameManager.songposinbeat);
+            //console.log("songposbeat = " + gameManager.songposinbeat);
             gameManager.timerBeat = gameManager.songposinbeat - lastsp;
             //gameManager.timerBeat += clockBPM.getDelta();
             //console.log("timer = " + gameManager.timerBeat);
@@ -281,8 +280,7 @@ function animate(){
 
         gameManager.cleanBlocks();
 
-        let tabintersect = [];
-        gameManager.collisionBlocksPads(tabintersect);
+        gameManager.collisionBlocksPads();
     
         collisionTimer.update();
         gameManager.collisionTime += collisionTimer.getDelta();

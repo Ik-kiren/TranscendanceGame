@@ -107,14 +107,15 @@ export default class GameManager {
                 this.boxesAnim.slice(0, 1),
                 console.log(this.currentAnim)
             });
+            console.log(box.scale);
             const action = this.currentAnim[this.currentAnim.length - 1].clipAction(this.longBoxAnim);
             action.clampWhenFinished = true;
-            action.setEffectiveTimeScale(0.5);
+            action.setEffectiveTimeScale(0.5 / box.scale.z);
             action.setLoop(THREE.LoopOnce);
             action.play();
             this.boxesAnim.push(box);
         } else {
-            console.log(this.timerBeat);
+            //console.log(this.timerBeat);
             for (let i = 0; i < this.currentAnim.length; i++) {
                 this.currentAnim[i].update(this.timerBeat);
             }
@@ -178,9 +179,9 @@ export default class GameManager {
         let sizePad = pad.children[0].children[0].geometry.boundingBox.max.z - pad.children[0].children[0].geometry.boundingBox.min.z;
         for (let i = minSize; i <= maxSize; i += 0.1) {
             if ((position + i > (pad.position.z - sizePad / 3) && position + i < (pad.position.z + sizePad / 3)) && box.position.x == pad.position.x) {
-                if (position + i > (pad.position.z - sizePad / 5) && (this.event.middlePressed || this.event.leftPressed || this.event.rightPressed))
+                if (position + i > (pad.position.z - sizePad / 5) && ((this.event.middlePressed && pad.position.x == 0) || (this.event.leftPressed && pad.position.x == -1) || (this.event.rightPressed && pad.position.x == 1)))
                     this.scoreNotation = "perfect";
-                else if (position + i < (pad.position.z - sizePad / 5) && (this.event.middlePressed || this.event.leftPressed || this.event.rightPressed))
+                else if (position + i < (pad.position.z - sizePad / 5) && ((this.event.middlePressed && pad.position.x == 0) || (this.event.leftPressed && pad.position.x == -1) || (this.event.rightPressed && pad.position.x == 1)))
                     this.scoreNotation = "good";
                 return true;
             }
@@ -188,19 +189,14 @@ export default class GameManager {
         return false;
     }
 
-    checkSameX(obj, obj2) {
-        if (obj.position.x == obj2.position.x)
-            return true;
-        return false;
-    }
-
     collisionBlocksPads() {
         for (let i = 0; i < this.boxes.length; i++) {
-            if (((this.event.leftPressed && !this.checkCollision(this.boxes[i][0], this.padLeft.pad) && this.checkSameX(this.boxes[i][0], this.padLeft.pad)) || (this.event.middlePressed && !this.checkCollision(this.boxes[i][0], this.padMiddle.pad) && this.checkSameX(this.boxes[i][0], this.padMiddle.pad)) || (this.event.rightPressed && !this.checkCollision(this.boxes[i][0], this.padRight.pad) && this.checkSameX(this.boxes[i][0], this.padRight.pad))) && this.collisionTime >= 0.7){
+            if (((this.event.leftPressed && !this.checkCollision(this.boxes[i][0], this.padLeft.pad)) || (this.event.middlePressed && !this.checkCollision(this.boxes[i][0], this.padMiddle.pad)) || (this.event.rightPressed && !this.checkCollision(this.boxes[i][0], this.padRight.pad))) && this.collisionTime >= 0.7){
                 this.wrongHit = true;
                 if (this.score > 9)
                     this.score -= 10;
                 this.collisionTime = 0;
+                this.scoreNotation = "missed";
             }
             if (this.checkCollision(this.boxes[i][0], this.padMiddle.pad) && this.event.middlePressed && !this.wrongHit){
                 this.boxHit(this.event.middlePressed, this.boxes[i][0], this.padMiddle.pad);
