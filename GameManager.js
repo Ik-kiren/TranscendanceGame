@@ -65,6 +65,7 @@ export default class GameManager {
     timerBeat;
 
     boxesAnim = [];
+    scoreNotation = "perfect";
 
     constructor() {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -108,7 +109,7 @@ export default class GameManager {
             });
             const action = this.currentAnim[this.currentAnim.length - 1].clipAction(this.longBoxAnim);
             action.clampWhenFinished = true;
-            action.setEffectiveTimeScale(1);
+            action.setEffectiveTimeScale(0.5);
             action.setLoop(THREE.LoopOnce);
             action.play();
             this.boxesAnim.push(box);
@@ -117,7 +118,6 @@ export default class GameManager {
             for (let i = 0; i < this.currentAnim.length; i++) {
                 this.currentAnim[i].update(this.timerBeat);
             }
-            //this.currentAnim.update(this.timerBeat);
         }
     }
 
@@ -177,7 +177,11 @@ export default class GameManager {
         }
         let sizePad = pad.children[0].children[0].geometry.boundingBox.max.z - pad.children[0].children[0].geometry.boundingBox.min.z;
         for (let i = minSize; i <= maxSize; i += 0.1) {
-            if ((position + i > (pad.position.z - sizePad / 8) && position + i < (pad.position.z + sizePad / 8)) && box.position.x == pad.position.x) {
+            if ((position + i > (pad.position.z - sizePad / 3) && position + i < (pad.position.z + sizePad / 3)) && box.position.x == pad.position.x) {
+                if (position + i > (pad.position.z - sizePad / 5) && (this.event.middlePressed || this.event.leftPressed || this.event.rightPressed))
+                    this.scoreNotation = "perfect";
+                else if (position + i < (pad.position.z - sizePad / 5) && (this.event.middlePressed || this.event.leftPressed || this.event.rightPressed))
+                    this.scoreNotation = "good";
                 return true;
             }
         }

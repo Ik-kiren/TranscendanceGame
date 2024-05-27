@@ -2,13 +2,16 @@ import * as THREE from 'three';
 import { Timer } from 'three/addons/misc/Timer.js';
 import { randInt } from 'three/src/math/MathUtils.js';
 import { GLTFLoader } from 'three/examples/jsm/Addons.js';
+import { GUI } from 'dat.gui';
 
 import {animation, addScoreAnim} from './animation.js';
 import {createBox, createLongBox, createRapidBox} from './createobject.js';
 import { manageRoads } from './roadManager.js';
-import GameManager from './GameObject.js';
+import GameManager from './GameManager.js';
 
 export let gameManager = new GameManager();
+
+const gui = new GUI();
 
 function loadObject(path) {
     return new Promise((resolve, reject) => {
@@ -34,6 +37,15 @@ musicLoader.load( './ado.mp3', function (buffer) {
     });
 });
 
+const SoundControl = function () {
+    this.volume = music.getVolume();
+};
+
+const soundControl = new SoundControl();
+
+gui.add(soundControl, 'volume', 0, 1, 0.01).onChange(function () {
+    music.setVolume(soundControl.volume);
+});
 
 const loaderLB = new GLTFLoader();
 loaderLB.load( 'longPush.glb', function ( gltf ) {
@@ -68,12 +80,12 @@ const loader = new GLTFLoader();
 loader.load( 'road.glb', function ( gltf ) {
     gameManager.road = gltf.scene;
     gameManager.roads.push(gltf.scene);
-    gltf.scene.scale.set(1,1,0.8);
+    gltf.scene.scale.set(1, 1, 0.8);
     gltf.scene.rotation.y = Math.PI / 2;
     gameManager.scene.add( gltf.scene );
     let secondRoad = gltf.scene.clone();
     gameManager.roads.push(secondRoad);
-    secondRoad.scale.set(1,1,0.8);
+    secondRoad.scale.set(1, 1, 0.8);
     secondRoad.position.z = -255;
     secondRoad.rotation.y = Math.PI / 2;
     gameManager.scene.add(secondRoad);
@@ -143,6 +155,7 @@ gameManager.scene.add(mesh);
 function writeScore(){
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.fillText(gameManager.score, 0, 30);
+    context.fillText(gameManager.scoreNotation, 0, 70);
     texture.needsUpdate = true;
 }
 
@@ -181,33 +194,22 @@ function init() {
 
 
 function spawnBlocks(nextNote){
-    //gameManager.time += gameManager.timer.getDelta();
-    //if (gameManager.time > gameManager.spawnTimer){
-       // let randomBox = randInt(0, 2);
-        //if (randomBox == 0) {
-            if (nextNote[2] >= 1)
-                gameManager.boxes.push([createLongBox(gameManager, nextNote[2]), nextNote]);
-            else
-                gameManager.boxes.push([createBox(gameManager), nextNote]);
-        //}
-        //else if (randomBox == 1)
-            //gameManager.boxes.push(createLongBox(gameManager))
-       // else if (randomBox == 2)
-            //gameManager.boxes.push(createRapidBox(0xcc2062))
-        //console.log(gameManager.boxes[gameManager.boxes.length - 1][0]);
-        gameManager.boxes[gameManager.boxes.length - 1][0].position.z = gameManager.boxParams.spawnPosition;
-        gameManager.boxes[gameManager.boxes.length - 1][0].position.y = gameManager.boxParams.positionY;
-        gameManager.boxes[gameManager.boxes.length - 1][0].position.x = gameManager.boxes[gameManager.boxes.length - 1][1][1];
-        gameManager.scene.add(gameManager.boxes[gameManager.boxes.length - 1][0]);
-        gameManager.time = 0;
-    //}
+    if (nextNote[2] >= 1)
+        gameManager.boxes.push([createLongBox(gameManager, nextNote[2]), nextNote]);
+    else
+        gameManager.boxes.push([createBox(gameManager), nextNote]);
+    gameManager.boxes[gameManager.boxes.length - 1][0].position.z = gameManager.boxParams.spawnPosition;
+    gameManager.boxes[gameManager.boxes.length - 1][0].position.y = gameManager.boxParams.positionY;
+    gameManager.boxes[gameManager.boxes.length - 1][0].position.x = gameManager.boxes[gameManager.boxes.length - 1][1][1];
+    gameManager.scene.add(gameManager.boxes[gameManager.boxes.length - 1][0]);
+    gameManager.time = 0;
 }
 
 const clockBH = new THREE.Clock(true);
 
 const analyzer = new THREE.AudioAnalyser(music, 32);
 
-let secperbeat = 60 /132;
+let secperbeat = 60 / 132;
 let lastsp = 0;
 
 let notes = [[6, -1, 2], [10, 1, 2], [18, 0], [20, 0], [20.5, -1], [21, 1], [21.5, 0], [22, -1], [24, 1], [25, 0], [26, -1], [30, 0], [31, -1], [32, 0], [33, 0], [34, 0],
@@ -217,7 +219,7 @@ let notes = [[6, -1, 2], [10, 1, 2], [18, 0], [20, 0], [20.5, -1], [21, 1], [21.
     [67.25, 1], [68, 1], [69, 0], [69.25, 1], [70, 1], [70, 0], [71, 1], [71, 0], [71.5, 1], [71.5, 0], [72, 1], [72, 0], [73, -1], [74, 0], [74.25, -1], [75, -1], [76, 0], [76.25, -1], [77, -1], [78, 0],
     [78.25, -1], [79, 0], [79.5, 0], [82, 1], [83, 0], [83.25, 1], [84, 1], [85, 0], [85.25, 1], [86, 1], [87, 0], [87.25, 1], [88, 1], [89, 0], [89.25, 1], [90, 1], [91, 0], [91.25, 1], [92, 1], [93, 0], [93.25, 1],
     [94, 1], [95, 0], [95.5, 1], [96, 1], [97, 0], [97.25, 1], [98, 1], [99, 0], [99.25, 1], [100, 1], [101, 0], [101.25, 1], [102, 1], [103, 0], [103.25, 1], [104, 1], [105, 0], [105.25, 1], [106, 1], [107, 0],
-    [107.25, 1], [108, 1], [109, 0], [109.25, 1], [110, 1], [114, 0], [115, 0], [116, 0], [117, 0], [118, 0], [119, 0], [120, 0], [121, 0], [122, 0], [123, 0], [124, 0], [125, 0], [126, 0],
+    [107.25, 1], [108, 1], [109, 0], [109.25, 1], [110.5, 1, 3], [114, 0], [115, 0], [116, 0], [117, 0], [118, 0], [119, 0], [120, 0], [121, 0], [122, 0], [123, 0], [124, 0], [125, 0], [126, 0],
     [127, 0], [128, 0], [129, 0], [130, 0], [131, 0], [132, 0], [133, 0], [134, 0], [135, 0], [136, 0], [137, 0], [138, 0], [139, 0], [140, 0], [141, 0], [143, 0], [143, -1], [143, 1], [143.5, 0], [143.5, -1], [143.5, 1],
     [144, 0], [144, 1], [144, -1], [144.5, 0], [144.5, 1], [144.5, -1], [146, -1], [147, 0], [147.25, -1], [148, -1], [149, 0], [149.25, -1], [150, -1], [151, 0], [151.25, -1], [152, -1], [153, 0], [153.25, -1], [154, -1],
     [155, 0], [155.25, -1], [156, -1], [157, 0], [157.25, -1], [158, -1], [159, 0], [159.25, -1], [160, -1], [161, 0], [161.25, -1], [162, -1], [163, 0], [163.25, -1], [164, -1], [165, 0], [165.25, -1], [166, -1], [167, 0], [167.25, -1],
@@ -230,14 +232,9 @@ let notes = [[6, -1, 2], [10, 1, 2], [18, 0], [20, 0], [20.5, -1], [21, 1], [21.
     [278, 0, 2], [282, 1, 2], [286, -1, 2], [294, 1, 2], [298, 0, 2], [302, 1, 2], [310, 0], [311, 1], [312, 1], [314.5, 0], [315, 1], [316, 0], [318, 1], [320, 1], [323, 1], [324.5, 1], [326, 0], [327.5, 0], [331, 0], [334, 0],
     [336, 0], [337, -1], [337.25, 1], [338, 0], [339, -1], [339.25, 1], [340, 0], [341, -1], [341.25, 1], [342, 0], [343, -1], [343.25, 1], [344, 0], [345, -1], [345.25, 1], [346, 0], [347, -1], [347.25, 1], [348, 0], [349, -1], [349.25, 1],
     [350, 0], [351, -1], [351.25, 1], [352, 0], [353, -1], [353.25, 1], [354, 0], [355, -1], [355.25, 1], [356, 0], [357, -1], [357.25, 1], [358, 0], [359, -1], [359.25, 1], [360, 0], [361, -1], [361.25, 1], [362, 0], [363, -1], [363.25, 1],
-    [364, 0], [365, -1], [365.25, 1], [366, 0], [367, -1], [367.25, 1], [368, 0], [369, -1], [369.25, 1], [370, 0], [371, -1], [371.25, 1], [372, 0], [373, -1], [373.25, 1], [374, 0], [375, -1], [375.25, 1], [376, 0], [377, -1], [378.25, 1],
-    [379, 0], [380, -1], [380.25, 1], [381, 0], [382, -1], [382.25, 1], [383, 0], [384, -1], [384.25, 1], [385, 0], [386, -1], [386.25, 1], [387, 0], [388, -1], [388.25, 1], [389, 0], [390, -1], [390.25, 1], [391, 0], [392, -1], [392.25, 1],
-    [393, 0], [394, -1], [394.25, 1], [395, 0], [396, -1], [396.25, 1], [397, 0], [398, -1], [398.25, 1], [399, 0], [400, -1], [400.25, 1], [401, 0], [402, -1], [402.25, 1], [403, 0], [404, -1], [404.25, 1]];
-
-/*let notes = [[6, 0], [10, 1], [18, -1], [19.5, 0], [20, 1], [20.5, 0], [21, -1], [22, 0], [24, 1], [25, 0], [26, -1], [29.5, 0], [30.5, -1], [31.5, 0], [33.5, 1], [34, 0],
-    [34.5, -1], [35, 0], [35.5, 1], [36, 0], [36.5,-1], [37, 0], [37.5, 1], [38, 0], [38.5, -1], [39, 0], [39.5, 1], [40, 0], [40.5, -1], [41, 0], [41.5, 1], [42, 0],
-    [42.5, -1], [43, 0], [43.5, 1], [44, 0], [46, 1], [46, -1], [47, 1], [47, -1], [48, 1], [48, -1], [50, 0],
-    [51, -1], [52, 1], [53, -1], [54, 0], [55, 1], [56, -1], [57, 1], [58, -1], [59, -1], [60, 1], [61, 0], [62, 0]];*/
+    [364, 0], [365, -1], [365.25, 1], [366, 0], [367, -1], [367.25, 1], [368, 0], [369, -1], [369.25, 1], [370, 0], [371, -1], [371.25, 1], [372, 0], [373, -1], [373.25, 1], [374, 0], [375, -1], [375.25, 1], [376, 0], [377, -1], [377.25, 1],
+    [378, 0], [379, -1], [379.25, 1], [380, 0], [381, -1], [381.25, 1], [382, 0], [383, -1], [383.25, 1], [384, 0], [385, -1], [385.25, 1], [386, 0], [387, -1], [387.25, 1], [388, 0], [389, -1], [389.25, 1], [390, 0], [391, -1], [391.25, 1],
+    [392, 0], [393, -1], [393.25, 1], [394, 0], [395, -1], [395.25, 1], [396, 0], [397, -1], [397.25, 1], [398, 0], [399, -1], [399.25, 1], [400, 0], [401, -1], [401.25, 1], [402, 0], [403, -1], [403.25, 1], [404, 0], [405, -1], [405.25, 1]];
 
 let nextNote = 0;
 
@@ -262,7 +259,7 @@ function animate(){
             gameManager.bloomPass.strength = 0.3 + (analyzer.getAverageFrequency() / 200);
             lastsp = gameManager.songposinbeat;
             gameManager.songposinbeat = music.source.context.currentTime / secperbeat;
-            //console.log("songposbeat = " + gameManager.songposinbeat);
+            console.log("songposbeat = " + gameManager.songposinbeat);
             gameManager.timerBeat = gameManager.songposinbeat - lastsp;
             //gameManager.timerBeat += clockBPM.getDelta();
             //console.log("timer = " + gameManager.timerBeat);
